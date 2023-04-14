@@ -1,7 +1,10 @@
 package com.example.tg_bot_wb;
 
 import com.example.tg_bot_wb.entity.Person;
+import com.example.tg_bot_wb.repository.MessageRepository;
 import com.example.tg_bot_wb.repository.PersonRepository;
+import com.example.tg_bot_wb.repository.ProductRepository;
+import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -17,13 +20,15 @@ public class TgBotWbApplication {
 	}
 
 	@Bean
-	public Person getUser(PersonRepository personRepository) throws TelegramApiException {
-
-//		Person person = new Person("Fedor");
-//		personRepository.save(person);
+	public Person getUser(PersonRepository personRepository
+						, ProductRepository productRepository
+						, MessageRepository messageRepository
+						, RequestDetailsRepository requestDetailsRepository) throws TelegramApiException {
 
 		TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-		Bot bot = new Bot(personRepository);
+		Bot bot = new Bot("6097077392:AAFzXBt7XCXQmOpTCfGBK1jMjedHXD-I7SI"
+							,personRepository, productRepository
+							, messageRepository, requestDetailsRepository);
 		botsApi.registerBot(bot);
 		bot.sendText(5124083894L,"Hi!");
 

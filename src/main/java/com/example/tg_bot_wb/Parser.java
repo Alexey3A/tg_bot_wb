@@ -2,6 +2,8 @@ package com.example.tg_bot_wb;
 
 import com.example.tg_bot_wb.entity.Product;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 public class Parser {
@@ -19,30 +21,42 @@ public class Parser {
 
     public Product parseProduct(Product product) throws InterruptedException {
         System.setProperty("webdriver.chrome.driver", "C:/IdeaProjects/chromedriver.exe");
-        ChromeDriver driver = new ChromeDriver();
         String article = product.getArticle();
+        ChromeDriver driver = new ChromeDriver();
         driver.get(URL);
 
-        Thread.sleep(2000);
 
-        driver.findElement(new By.ByXPath("/html/body/div[1]/header/div/div[2]/div[3]/div[1]/input"))
-                .sendKeys(article);
-        driver.findElement(By.id("applySearchBtn")).click();
+        try {
+            Thread.sleep(2000);
+            driver.findElement(new By.ByXPath("/html/body/div[1]/header/div/div[2]/div[3]/div[1]/input"))
+                    .sendKeys(article);
+            driver.findElement(By.id("applySearchBtn")).click();
 
-        Thread.sleep(4000);
+            Thread.sleep(4000);
 
-        String productName = driver.findElement(By.tagName("h1")).getText();
-        product.setProductName(productName);
+            String productName = driver.findElement(By.tagName("h1")).getText();
+            product.setProductName(productName);
 
-        String price = driver.findElement(By
-                        .className("product-page__aside-sticky")).findElement(By.tagName("p"))
-                .getText();
+            String price = driver.findElement(By
+                            .className("product-page__aside-sticky")).findElement(By.tagName("p"))
+                    .getText();
 
-        price = price.replaceAll("\\s", "");
-        price = price.substring(0, price.indexOf("₽"));
-        double doublePrice = Double.parseDouble(price);
-        System.out.println(price);
-        product.setCurrentPrice(doublePrice);
+            price = price.replaceAll("\\s", "");
+            price = price.substring(0, price.indexOf("₽"));
+            double doublePrice = Double.parseDouble(price);
+            System.out.println(price);
+            product.setCurrentPrice(doublePrice);
+        } catch (IllegalArgumentException e){
+            driver.quit();
+            throw new IllegalArgumentException();
+        } catch (InterruptedException e) {
+            driver.quit();
+            throw new InterruptedException();
+        } catch (WebDriverException e) {
+            driver.quit();
+            throw new WebDriverException();
+        }
+
 
         driver.quit();
         return product;

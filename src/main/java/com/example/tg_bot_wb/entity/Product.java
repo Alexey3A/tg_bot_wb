@@ -4,7 +4,9 @@ package com.example.tg_bot_wb.entity;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "product")
@@ -21,11 +23,11 @@ public class Product {
     @Column(name = "current_price")
     private double currentPrice;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(name = "product_person"
             , joinColumns = @JoinColumn(name = "product_id")
             , inverseJoinColumns = @JoinColumn(name = "person_id"))
-    private List<Person> personList;
+    private Set<Person> personList;
 
     public Product() {
     }
@@ -41,7 +43,7 @@ public class Product {
 
     public void addPersonToProduct(Person person){
         if(personList == null) {
-            personList = new ArrayList<>();
+            personList = new HashSet<>();
         }
         personList.add(person);
     }
@@ -86,11 +88,24 @@ public class Product {
         this.currentPrice = currentPrice;
     }
 
-    public List<Person> getPersonList() {
+    public Set<Person> getPersonList() {
         return personList;
     }
 
-    public void setPersonList(List<Person> personList) {
+    public void setPersonList(Set<Person> personList) {
         this.personList = personList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return article.equals(product.article);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(article);
     }
 }

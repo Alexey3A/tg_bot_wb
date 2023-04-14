@@ -2,7 +2,7 @@ package com.example.tg_bot_wb.entity;
 
 import jakarta.persistence.*;
 
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name="person")
@@ -24,11 +24,11 @@ public class Person {
     @OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
     private List<Message> messageList;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.EAGER)
     @JoinTable(name = "product_person"
             , joinColumns = @JoinColumn(name = "person_id")
             , inverseJoinColumns = @JoinColumn(name = "product_id"))
-    private List<Product> productList;
+    private Set<Product> productList;
 
     public Person() {
     }
@@ -38,6 +38,12 @@ public class Person {
         this.tgUserID = tgUserID;
     }
 
+    public void addProductToPerson(Product product){
+        if (productList.isEmpty()){
+            productList = new HashSet<>();
+        }
+        productList.add(product);
+    }
 
     public Long getId() {
         return id;
@@ -95,11 +101,11 @@ public class Person {
         this.messageList = messageList;
     }
 
-    public List<Product> getProductList() {
+    public Set<Product> getProductList() {
         return productList;
     }
 
-    public void setProductList(List<Product> productList) {
+    public void setProductList(Set<Product> productList) {
         this.productList = productList;
     }
 
@@ -109,5 +115,18 @@ public class Person {
                 "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Person person = (Person) o;
+        return tgUserID.equals(person.tgUserID);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tgUserID);
     }
 }
