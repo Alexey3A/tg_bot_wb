@@ -15,12 +15,12 @@ public class RequestDetails {
     @Column(name = "expected_price")
     private double expectedPrice;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id")
     Product product;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "message_id")
+    @OneToOne(mappedBy = "requestDetails"
+            , cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.DETACH}, fetch = FetchType.EAGER)
     Message message;
 
     public RequestDetails() {

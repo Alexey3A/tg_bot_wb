@@ -23,7 +23,7 @@ public class Product {
     @Column(name = "current_price")
     private double currentPrice;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
     @JoinTable(name = "product_person"
             , joinColumns = @JoinColumn(name = "product_id")
             , inverseJoinColumns = @JoinColumn(name = "person_id"))

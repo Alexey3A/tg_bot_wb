@@ -1,5 +1,7 @@
 package com.example.tg_bot_wb;
 
+import com.example.tg_bot_wb.dao.PersonDAO;
+import com.example.tg_bot_wb.dao.ProductDAO;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.repository.MessageRepository;
 import com.example.tg_bot_wb.repository.PersonRepository;
@@ -23,12 +25,14 @@ public class TgBotWbApplication {
 	public Person getUser(PersonRepository personRepository
 						, ProductRepository productRepository
 						, MessageRepository messageRepository
-						, RequestDetailsRepository requestDetailsRepository) throws TelegramApiException {
+						, RequestDetailsRepository requestDetailsRepository
+						, ProductDAO productDAO, PersonDAO personDAO) throws TelegramApiException {
 
 		TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
 		Bot bot = new Bot("6097077392:AAFzXBt7XCXQmOpTCfGBK1jMjedHXD-I7SI"
 							,personRepository, productRepository
-							, messageRepository, requestDetailsRepository);
+							, messageRepository, requestDetailsRepository
+							, personDAO, productDAO);
 		botsApi.registerBot(bot);
 		bot.sendText(5124083894L,"Hi!");
 

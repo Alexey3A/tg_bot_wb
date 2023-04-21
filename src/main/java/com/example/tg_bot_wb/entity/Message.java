@@ -15,15 +15,25 @@ public class Message {
     @Column(name = "date")
     private long date;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
     @JoinColumn(name = "person_id")
     private Person person;
+
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}
+            , fetch = FetchType.EAGER)
+    @JoinColumn(name = "request_details_id")
+    private RequestDetails requestDetails;
 
     public Message() {
     }
 
     public Message(long id, String messageText, long date) {
         this.id = id;
+        this.messageText = messageText;
+        this.date = date;
+    }
+
+    public Message(String messageText, long date) {
         this.messageText = messageText;
         this.date = date;
     }
@@ -58,6 +68,14 @@ public class Message {
 
     public void setPerson(Person person) {
         this.person = person;
+    }
+
+    public RequestDetails getRequestDetails() {
+        return requestDetails;
+    }
+
+    public void setRequestDetails(RequestDetails requestDetails) {
+        this.requestDetails = requestDetails;
     }
 
     @Override
