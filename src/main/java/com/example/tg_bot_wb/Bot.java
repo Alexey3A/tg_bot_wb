@@ -3,7 +3,6 @@ package com.example.tg_bot_wb;
 
 import com.example.tg_bot_wb.dao.PersonDAO;
 import com.example.tg_bot_wb.dao.ProductDAO;
-import com.example.tg_bot_wb.entity.Message;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
@@ -18,11 +17,17 @@ import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -61,6 +66,13 @@ public class Bot extends TelegramLongPollingBot {
 
     public void onUpdateReceived(Update update) {
 
+        User user = null;
+        Message msg = null;
+
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            msg = update.getMessage();
+            user = msg.getFrom();
+        }
         var next = InlineKeyboardButton.builder()
                 .text("Next").callbackData("next")
                 .build();
@@ -78,11 +90,9 @@ public class Bot extends TelegramLongPollingBot {
         keyboardM2 = InlineKeyboardMarkup.builder().keyboardRow(List.of(back)).keyboardRow(List.of(url)).build();
 
 
-        var msg = update.getMessage();
-        var user = msg.getFrom();
-        long userID = user.getId();
+//        long userID = user.getId();
 
-        System.out.println(update);
+        /*System.out.println(update);
         System.out.println(user.getFirstName() + " wrote " + msg.getText());
 
         String article = msg.getText();
@@ -130,27 +140,95 @@ public class Bot extends TelegramLongPollingBot {
                 sendText(userID, "Товар: " + product.getProductName());
                 sendText(userID, "Цена: " + product.getCurrentPrice() + " р.");
             }
-        }
+        }*/
 
 
+        if (msg != null && msg.isCommand()) {
+            var txt = msg.getText();
 
-        var txt = msg.getText();
-
-        if (msg.isCommand()) {
             if (txt.equals("/article")) {
                 isArticle = true;
-                sendText(userID, "Укажите артикул товара");
+                sendText(msg.getFrom().getId(), "Укажите артикул товара");
             } else if (txt.equals("/menu")) {
-                sendMenu(userID, "<b>Menu 1</b>", keyboardM1);
-            } return;
+//                sendMenu(user.getId(), "<b>Menu 1</b>", keyboardM1);
+                sendMenu(msg);
+                isArticle = false;
+            }
         }
-        if (update.hasCallbackQuery()) {
+        if (msg != null && msg.getText().equals("Мой список товаров")) {
+            SendMessage sendMessage = SendMessage.builder()
+                    .chatId(user.getId().toString())
+                    .text("Тут будет список выших товаров").build();
             try {
-                buttonTap(userID,txt,  update.getCallbackQuery().getData(), msg.getMessageId());
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException();
+            }
+        }
+
+        if (update.hasCallbackQuery()) {
+
+            CallbackQuery callbackQuery = update.getCallbackQuery();
+
+            Long id = callbackQuery.getMessage().getChatId();
+            String queryId = callbackQuery.getId();
+            String data = callbackQuery.getData();
+            int msgId = callbackQuery.getMessage().getMessageId();
+
+            try {
+                buttonTap(callbackQuery);
+//                buttonTap(id, queryId, data, msgId);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private void buttonTap(Long id, String queryId, String data, int msgId) throws TelegramApiException {
+
+        EditMessageText newTxt = EditMessageText.builder()
+                .chatId(id.toString())
+                .messageId(msgId).text("").build();
+
+        EditMessageReplyMarkup newKb = EditMessageReplyMarkup.builder()
+                .chatId(id.toString()).messageId(msgId).build();
+
+        if (data.equals("next")) {
+            newTxt.setText("MENU 2");
+            newKb.setReplyMarkup(keyboardM2);
+        } else if (data.equals("back")) {
+            newTxt.setText("MENU 1");
+            newKb.setReplyMarkup(keyboardM1);
+        }
+
+        AnswerCallbackQuery close = AnswerCallbackQuery.builder()
+                .callbackQueryId(queryId).build();
+
+        execute(close);
+        execute(newTxt);
+        execute(newKb);
+    }
+
+    private void buttonTap(CallbackQuery callbackQuery) throws TelegramApiException {
+        Long id = callbackQuery.getMessage().getChatId();
+        String queryId = callbackQuery.getId();
+        String data = callbackQuery.getData();
+        int msgId = callbackQuery.getMessage().getMessageId();
+
+        EditMessageText newTxt = EditMessageText.builder()
+                .chatId(id.toString())
+                .messageId(msgId).text("").build();
+
+        if (data.equals("Мой список товаров")) {
+            newTxt.setText("MENU 2");
+        }
+
+        AnswerCallbackQuery close = AnswerCallbackQuery.builder()
+                .callbackQueryId(queryId).build();
+
+        execute(close);
+        execute(newTxt);
+
     }
 
     public void sendText(Long who, String what) {
@@ -165,7 +243,7 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    public void sendMenu(Long who, String txt, InlineKeyboardMarkup kb){
+    public void sendMenu(Long who, String txt, InlineKeyboardMarkup kb) {
         SendMessage sm = SendMessage.builder().chatId(who.toString())
                 .parseMode("HTML").text(txt)
                 .replyMarkup(kb).build();
@@ -177,29 +255,47 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    private void buttonTap(Long id, String queryId, String data, int msgId) throws TelegramApiException {
+    public void sendMenu(Message msg) {
 
-        EditMessageText newTxt = EditMessageText.builder()
-                .chatId(id.toString())
-                .messageId(msgId).text("").build();
+        // Создаем клавиатуру
+        ReplyKeyboardMarkup replyKeyboardMarkup = new
+                ReplyKeyboardMarkup();
 
-        EditMessageReplyMarkup newKb = EditMessageReplyMarkup.builder()
-                .chatId(id.toString()).messageId(msgId).build();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
 
-        if(data.equals("next")) {
-            newTxt.setText("MENU 2");
-            newKb.setReplyMarkup(keyboardM2);
-        } else if(data.equals("back")) {
-            newTxt.setText("MENU 1");
-            newKb.setReplyMarkup(keyboardM1);
+        // Создаем список строк клавиатуры
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        // Первая строчка клавиатуры
+        KeyboardRow keyboardFirstRow = new KeyboardRow();
+        // Добавляем кнопки в первую строчку клавиатуры
+        keyboardFirstRow.add("Мой список товаров");
+
+        // Вторая строчка клавиатуры
+        KeyboardRow keyboardSecondRow = new KeyboardRow();
+        // Добавляем кнопки во вторую строчку клавиатуры
+        keyboardSecondRow.add("Пока просто кнопка");
+
+        // Добавляем все строчки клавиатуры в список
+        keyboard.add(keyboardFirstRow);
+        keyboard.add(keyboardSecondRow);
+        // и устанавливаем этот список нашей клавиатуре
+        replyKeyboardMarkup.setKeyboard(keyboard);
+
+        SendMessage sendMessage = SendMessage.builder()
+                .replyMarkup(replyKeyboardMarkup)
+                .chatId(msg.getChatId())
+                .replyToMessageId(msg.getMessageId())
+                .text("-")
+                .build();
+
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
         }
-
-        AnswerCallbackQuery close = AnswerCallbackQuery.builder()
-                .callbackQueryId(queryId).build();
-
-        execute(close);
-        execute(newTxt);
-        execute(newKb);
     }
 
     public void copyMessage(Long who, Integer msgId) {
