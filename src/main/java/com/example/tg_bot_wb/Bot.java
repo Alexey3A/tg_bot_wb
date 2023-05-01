@@ -1,6 +1,5 @@
 package com.example.tg_bot_wb;
 
-
 import com.example.tg_bot_wb.dao.PersonDAO;
 import com.example.tg_bot_wb.dao.ProductDAO;
 import com.example.tg_bot_wb.entity.Person;
@@ -13,9 +12,7 @@ import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import org.openqa.selenium.WebDriverException;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
-import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -23,10 +20,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +34,6 @@ public class Bot extends TelegramLongPollingBot {
     private PersonDAO personDAO;
     private ProductDAO productDAO;
     private boolean isArticle = false;
-    private InlineKeyboardMarkup keyboardM1;
-    private InlineKeyboardMarkup keyboardM2;
 
     public Bot(String botToken) {
         super(botToken);
@@ -73,32 +66,16 @@ public class Bot extends TelegramLongPollingBot {
             msg = update.getMessage();
             user = msg.getFrom();
         }
-        var next = InlineKeyboardButton.builder()
-                .text("Next").callbackData("next")
-                .build();
 
-        var back = InlineKeyboardButton.builder()
-                .text("Back").callbackData("back")
-                .build();
+        long userID = user.getId();
 
-        var url = InlineKeyboardButton.builder()
-                .text("Tutorial")
-                .url("https://core.telegram.org/bots/api")
-                .build();
-
-        keyboardM1 = InlineKeyboardMarkup.builder().keyboardRow(List.of(next)).build();
-        keyboardM2 = InlineKeyboardMarkup.builder().keyboardRow(List.of(back)).keyboardRow(List.of(url)).build();
-
-
-//        long userID = user.getId();
-
-        /*System.out.println(update);
+        System.out.println(update);
         System.out.println(user.getFirstName() + " wrote " + msg.getText());
 
         String article = msg.getText();
         System.out.println(article);
 
-        Message personMessage = new Message(msg.getText(), System.currentTimeMillis());
+        com.example.tg_bot_wb.entity.Message personMessage = new com.example.tg_bot_wb.entity.Message(msg.getText(), System.currentTimeMillis());
         Person person = personRepository.findByTgUserID(userID);
 
         if (person == null) {
@@ -107,7 +84,45 @@ public class Bot extends TelegramLongPollingBot {
         }
         Product product = productRepository.findByArticle(article);
 
-        if (isArticle) {
+        if (msg.isCommand()) {
+            var txt = msg.getText();
+
+            if (txt.equals("/article")) {
+                isArticle = true;
+                sendText(msg.getFrom().getId(), "Укажите артикул товара");
+            } else if (txt.equals("/menu")) {
+                isArticle = false;
+                sendMenu(msg);
+            }
+            return;
+        }
+
+        if (msg.getText().equals("Добавить товар")) {
+            isArticle = true;
+            SendMessage sendMessage = SendMessage.builder()
+                    .chatId(user.getId().toString())
+                    .text("Укажите артикул товара").build();
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException();
+            }
+
+        }
+        if (msg.getText().equals("Мой список товаров")) {
+            isArticle = false;
+            String productList = person.getProductList().toString();
+            SendMessage sendMessage = SendMessage.builder()
+                    .chatId(user.getId().toString())
+                    .text(productList).build();
+            try {
+                execute(sendMessage);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException();
+            }
+        }
+
+        if (isArticle && !article.equals("Добавить товар")) {
 
             if (product == null) {
                 product = new Product(article);
@@ -116,7 +131,7 @@ public class Bot extends TelegramLongPollingBot {
                     parser.parseProduct(product);
                     product = parser.getProduct();
                     personDAO.saveOrUpdatePerson(person, personMessage, product);
-                    sendText(userID, "Товар: " + product.getProductName());
+                    sendText(userID, "Добавлен товар: " + product.getProductName());
                     sendText(userID, "Цена: " + product.getCurrentPrice() + " р.");
                 } catch (IllegalArgumentException e) {
                     sendText(userID, "Укажите корректный артикул товара");
@@ -137,76 +152,21 @@ public class Bot extends TelegramLongPollingBot {
 
                requestDetailsRepository.save(requestDetails);
 
-                sendText(userID, "Товар: " + product.getProductName());
+                sendText(userID, "Добавлен товар: " + product.getProductName());
                 sendText(userID, "Цена: " + product.getCurrentPrice() + " р.");
             }
-        }*/
-
-
-        if (msg != null && msg.isCommand()) {
-            var txt = msg.getText();
-
-            if (txt.equals("/article")) {
-                isArticle = true;
-                sendText(msg.getFrom().getId(), "Укажите артикул товара");
-            } else if (txt.equals("/menu")) {
-//                sendMenu(user.getId(), "<b>Menu 1</b>", keyboardM1);
-                sendMenu(msg);
-                isArticle = false;
-            }
+            isArticle = false;
         }
-        if (msg != null && msg.getText().equals("Мой список товаров")) {
-            SendMessage sendMessage = SendMessage.builder()
-                    .chatId(user.getId().toString())
-                    .text("Тут будет список выших товаров").build();
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException();
-            }
-        }
-
         if (update.hasCallbackQuery()) {
 
             CallbackQuery callbackQuery = update.getCallbackQuery();
 
-            Long id = callbackQuery.getMessage().getChatId();
-            String queryId = callbackQuery.getId();
-            String data = callbackQuery.getData();
-            int msgId = callbackQuery.getMessage().getMessageId();
-
             try {
                 buttonTap(callbackQuery);
-//                buttonTap(id, queryId, data, msgId);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    private void buttonTap(Long id, String queryId, String data, int msgId) throws TelegramApiException {
-
-        EditMessageText newTxt = EditMessageText.builder()
-                .chatId(id.toString())
-                .messageId(msgId).text("").build();
-
-        EditMessageReplyMarkup newKb = EditMessageReplyMarkup.builder()
-                .chatId(id.toString()).messageId(msgId).build();
-
-        if (data.equals("next")) {
-            newTxt.setText("MENU 2");
-            newKb.setReplyMarkup(keyboardM2);
-        } else if (data.equals("back")) {
-            newTxt.setText("MENU 1");
-            newKb.setReplyMarkup(keyboardM1);
-        }
-
-        AnswerCallbackQuery close = AnswerCallbackQuery.builder()
-                .callbackQueryId(queryId).build();
-
-        execute(close);
-        execute(newTxt);
-        execute(newKb);
     }
 
     private void buttonTap(CallbackQuery callbackQuery) throws TelegramApiException {
@@ -228,7 +188,6 @@ public class Bot extends TelegramLongPollingBot {
 
         execute(close);
         execute(newTxt);
-
     }
 
     public void sendText(Long who, String what) {
@@ -276,7 +235,7 @@ public class Bot extends TelegramLongPollingBot {
         // Вторая строчка клавиатуры
         KeyboardRow keyboardSecondRow = new KeyboardRow();
         // Добавляем кнопки во вторую строчку клавиатуры
-        keyboardSecondRow.add("Пока просто кнопка");
+        keyboardSecondRow.add("Добавить товар");
 
         // Добавляем все строчки клавиатуры в список
         keyboard.add(keyboardFirstRow);
@@ -293,19 +252,6 @@ public class Bot extends TelegramLongPollingBot {
 
         try {
             execute(sendMessage);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void copyMessage(Long who, Integer msgId) {
-        CopyMessage cm = CopyMessage.builder()
-                .fromChatId(who.toString())
-                .chatId(who.toString())
-                .messageId(msgId)
-                .build();
-        try {
-            execute(cm);
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }

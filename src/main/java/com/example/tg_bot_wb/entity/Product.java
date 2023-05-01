@@ -111,10 +111,8 @@ public class Product {
 
     @Override
     public String toString() {
-        return "Product{" +
-                "article='" + article + '\'' +
-                ", productName='" + productName + '\'' +
-                ", currentPrice=" + currentPrice +
-                '}';
+        return productName +
+                ", артикул: " + article +
+                ", текущая цена: " + currentPrice + "\n";
     }
 }

@@ -3,8 +3,10 @@ package com.example.tg_bot_wb;
 import com.example.tg_bot_wb.entity.Product;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 public class Parser {
 
@@ -20,9 +22,12 @@ public class Parser {
     }
 
     public Product parseProduct(Product product) throws InterruptedException {
-        System.setProperty("webdriver.chrome.driver", "C:/IdeaProjects/chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "G://IdeaProjects/chromedriver.exe");
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--start-maximized");
+        WebDriver driver = new ChromeDriver(options);
         String article = product.getArticle();
-        ChromeDriver driver = new ChromeDriver();
         driver.get(URL);
 
 
