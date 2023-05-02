@@ -142,6 +142,7 @@ public class Bot extends TelegramLongPollingBot {
                 }
             } else {
                 person.addProductToPerson(product);
+                person=personRepository.save(person);
                 RequestDetails requestDetails = new RequestDetails();
                 requestDetails.setProduct(product);
                 requestDetails.setStartPrice(product.getCurrentPrice());
