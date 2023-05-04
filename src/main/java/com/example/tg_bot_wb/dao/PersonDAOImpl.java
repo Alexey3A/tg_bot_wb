@@ -4,6 +4,8 @@ import com.example.tg_bot_wb.entity.Message;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
+import com.example.tg_bot_wb.repository.PersonRepository;
+import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +19,11 @@ public class PersonDAOImpl implements PersonDAO{
 
     @Autowired
     EntityManager entityManager;
+    @Autowired
+    RequestDetailsRepository requestDetailsRepository;
 
     @Override
+    @Transactional
     public void saveOrUpdatePerson(Person person) {
         entityManager.merge(person);
     }
@@ -33,14 +38,17 @@ public class PersonDAOImpl implements PersonDAO{
     @Transactional
     public void saveOrUpdatePerson(Person person, Message personMessage, Product product) {
 
-        person.addMessageToPerson(personMessage);
-        person.addProductToPerson(product);
+
         RequestDetails requestDetails = new RequestDetails();
         requestDetails.setProduct(product);
         requestDetails.setStartPrice(product.getCurrentPrice());
-        requestDetails.setMessage(personMessage);
+
         personMessage.setRequestDetails(requestDetails);
         personMessage.setPerson(person);
+        person.addMessageToPerson(personMessage);
+        person.addProductToPerson(product);
+        product.addPersonToProduct(person);
+        requestDetails.setProduct(product);
 
         entityManager.merge(person);
     }

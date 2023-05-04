@@ -6,4 +6,6 @@ import com.example.tg_bot_wb.entity.Product;
 
 public interface RequestDetailsDAO {
     void saveOrUpdateRequestDetails(Person person, Message personMessage, Product product);
+
+    void saveOrUpdateRequestDetails(Product product);
 }

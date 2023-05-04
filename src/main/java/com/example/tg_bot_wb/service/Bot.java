@@ -1,7 +1,8 @@
-package com.example.tg_bot_wb;
+package com.example.tg_bot_wb.service;
 
 import com.example.tg_bot_wb.dao.PersonDAO;
 import com.example.tg_bot_wb.dao.ProductDAO;
+import com.example.tg_bot_wb.dao.RequestDetailsDAO;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
@@ -22,8 +23,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 public class Bot extends TelegramLongPollingBot {
@@ -33,6 +37,7 @@ public class Bot extends TelegramLongPollingBot {
     private RequestDetailsRepository requestDetailsRepository;
     private PersonDAO personDAO;
     private ProductDAO productDAO;
+    private RequestDetailsDAO requestDetailsDAO;
     private boolean isArticle = false;
 
     public Bot(String botToken) {
@@ -43,7 +48,8 @@ public class Bot extends TelegramLongPollingBot {
             , ProductRepository productRepository
             , MessageRepository messageRepository
             , RequestDetailsRepository requestDetailsRepository
-            , PersonDAO personDAO, ProductDAO productDAO) {
+            , PersonDAO personDAO, ProductDAO productDAO
+            , RequestDetailsDAO requestDetailsDAO) {
         super(botToken);
         this.personRepository = personRepository;
         this.productRepository = productRepository;
@@ -51,6 +57,7 @@ public class Bot extends TelegramLongPollingBot {
         this.requestDetailsRepository = requestDetailsRepository;
         this.personDAO = personDAO;
         this.productDAO = productDAO;
+        this.requestDetailsDAO = requestDetailsDAO;
     }
 
     public String getBotUsername() {
@@ -107,7 +114,6 @@ public class Bot extends TelegramLongPollingBot {
             } catch (TelegramApiException e) {
                 throw new RuntimeException();
             }
-
         }
         if (msg.getText().equals("Мой список товаров")) {
             isArticle = false;
@@ -142,6 +148,7 @@ public class Bot extends TelegramLongPollingBot {
                 }
             } else {
                 person.addProductToPerson(product);
+                person = personRepository.save(person);
                 RequestDetails requestDetails = new RequestDetails();
                 requestDetails.setProduct(product);
                 requestDetails.setStartPrice(product.getCurrentPrice());
@@ -150,7 +157,7 @@ public class Bot extends TelegramLongPollingBot {
                 personMessage.setPerson(person);
                 person.addMessageToPerson(personMessage);
 
-               requestDetailsRepository.save(requestDetails);
+                requestDetailsRepository.save(requestDetails);
 
                 sendText(userID, "Добавлен товар: " + product.getProductName());
                 sendText(userID, "Цена: " + product.getCurrentPrice() + " р.");
@@ -254,6 +261,15 @@ public class Bot extends TelegramLongPollingBot {
             execute(sendMessage);
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void sendAPriceChangeNotification(Map<Person, String> messageForPerson) {
+        Set<Map.Entry<Person, String>> set = messageForPerson.entrySet();
+        for (Map.Entry<Person, String> entry : set) {
+            Person person = entry.getKey();
+            String message = entry.getValue();
+            sendText(person.getTgUserID(), message);
         }
     }
 }
