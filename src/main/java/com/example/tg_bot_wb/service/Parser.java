@@ -1,4 +1,4 @@
-package com.example.tg_bot_wb;
+package com.example.tg_bot_wb.service;
 
 import com.example.tg_bot_wb.entity.Product;
 import org.openqa.selenium.By;
@@ -22,7 +22,7 @@ public class Parser {
     }
 
     public Product parseProduct(Product product) throws InterruptedException {
-        System.setProperty("webdriver.chrome.driver", "G://IdeaProjects/chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "C://IdeaProjects/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--start-maximized");
