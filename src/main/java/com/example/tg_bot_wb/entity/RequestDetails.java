@@ -15,9 +15,11 @@ public class RequestDetails {
     @Column(name = "expected_price")
     private double expectedPrice;
 
-    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id")
-    Product product;
+    @Column(name = "current_price")
+    private double currentPrice;
+
+    @Column(name = "product_id")
+    long product;
 
     @OneToOne(mappedBy = "requestDetails"
             , cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST, CascadeType.DETACH}, fetch = FetchType.EAGER)
@@ -50,11 +52,11 @@ public class RequestDetails {
         this.expectedPrice = expectedPrice;
     }
 
-    public Product getProduct() {
+    public long getProduct() {
         return product;
     }
 
-    public void setProduct(Product product) {
+    public void setProduct(long product) {
         this.product = product;
     }
 
@@ -64,5 +66,13 @@ public class RequestDetails {
 
     public void setMessage(Message message) {
         this.message = message;
+    }
+
+    public double getCurrentPrice() {
+        return currentPrice;
+    }
+
+    public void setCurrentPrice(double currentPrice) {
+        this.currentPrice = currentPrice;
     }
 }

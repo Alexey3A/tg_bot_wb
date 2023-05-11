@@ -35,14 +35,14 @@ public class Notify {
             double startPrice = 0;
             double currentPrice = 0;
             Product product = productList.get(i);
-            currentPrice = product.getCurrentPrice();
+            currentPrice = product.getPrice();
             for (int k = 0; k < personList.size(); k++){
                 Person person = personList.get(k);
                 List<Message> messageList = person.getMessageList();
                 for (int j = 0; j < messageList.size(); j++){
                     Message message = messageList.get(j);
                     RequestDetails requestDetails = message.getRequestDetails();
-                    if (requestDetails.getProduct().getId() == product.getId()) {
+                    if (requestDetails.getProduct() == product.getId()) {
                         startPrice = requestDetails.getStartPrice();
                         if (currentPrice != startPrice && currentPrice != requestDetails.getExpectedPrice()) {
                             requestDetails.setExpectedPrice(currentPrice);

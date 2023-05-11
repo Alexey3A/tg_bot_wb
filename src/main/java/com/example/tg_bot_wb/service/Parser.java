@@ -2,7 +2,6 @@ package com.example.tg_bot_wb.service;
 
 import com.example.tg_bot_wb.entity.Product;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -50,7 +49,7 @@ public class Parser {
             price = price.substring(0, price.indexOf("₽"));
             double doublePrice = Double.parseDouble(price);
             System.out.println(price);
-            product.setCurrentPrice(doublePrice);
+            product.setPrice(doublePrice);
         } catch (IllegalArgumentException e){
             driver.quit();
             throw new IllegalArgumentException();

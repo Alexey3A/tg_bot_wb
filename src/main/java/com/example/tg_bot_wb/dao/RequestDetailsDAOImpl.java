@@ -18,8 +18,8 @@ public class RequestDetailsDAOImpl implements RequestDetailsDAO {
     @Transactional
     public void saveOrUpdateRequestDetails(Person person, Message personMessage, Product product) {
         RequestDetails requestDetails = new RequestDetails();
-        requestDetails.setProduct(product);
-        requestDetails.setStartPrice(product.getCurrentPrice());
+        requestDetails.setProduct(product.getId());
+        requestDetails.setStartPrice(product.getPrice());
         person.addMessageToPerson(personMessage);
         person.addProductToPerson(product);
 //        requestDetails.setMessage(personMessage);
@@ -34,7 +34,7 @@ public class RequestDetailsDAOImpl implements RequestDetailsDAO {
     public void saveOrUpdateRequestDetails(Product product) {
 
         RequestDetails requestDetails = new RequestDetails();
-        requestDetails.setProduct(product);
+        requestDetails.setProduct(product.getId());
 
         entityManager.merge(requestDetails);
     }

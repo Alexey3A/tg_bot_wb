@@ -74,7 +74,7 @@ public class Bot extends TelegramLongPollingBot {
             user = msg.getFrom();
         }
 
-        long userID = user.getId();
+        long tgUserID = user.getId();
 
         System.out.println(update);
         System.out.println(user.getFirstName() + " wrote " + msg.getText());
@@ -82,22 +82,18 @@ public class Bot extends TelegramLongPollingBot {
         String article = msg.getText();
         System.out.println(article);
 
-        com.example.tg_bot_wb.entity.Message personMessage = new com.example.tg_bot_wb.entity.Message(msg.getText(), System.currentTimeMillis());
-        Person person = personRepository.findByTgUserID(userID);
+        com.example.tg_bot_wb.entity.Message personMessage = new com.example.tg_bot_wb.entity.Message(article, System.currentTimeMillis());
+        Person person = personRepository.findByTgUserID(tgUserID);
 
         if (person == null) {
-            person = new Person(user.getFirstName(), userID);
-            personRepository.save(person);
+            person = new Person(user.getFirstName(), tgUserID);
+            person = personRepository.save(person);
         }
         Product product = productRepository.findByArticle(article);
 
         if (msg.isCommand()) {
             var txt = msg.getText();
-
-            if (txt.equals("/article")) {
-                isArticle = true;
-                sendText(msg.getFrom().getId(), "Укажите артикул товара");
-            } else if (txt.equals("/menu")) {
+            if (txt.equals("/menu")) {
                 isArticle = false;
                 sendMenu(msg);
             }
@@ -118,13 +114,17 @@ public class Bot extends TelegramLongPollingBot {
         if (msg.getText().equals("Мой список товаров")) {
             isArticle = false;
             String productList = person.getProductList().toString();
-            SendMessage sendMessage = SendMessage.builder()
-                    .chatId(user.getId().toString())
-                    .text(productList).build();
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException();
+            if (productList != null) {
+                SendMessage sendMessage = SendMessage.builder()
+                        .chatId(user.getId().toString())
+                        .text(productList).build();
+                try {
+                    execute(sendMessage);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException();
+                }
+            } else {
+                sendText(tgUserID, "Список пустой. Нажмите кнопку \"Добавить товар\"");
             }
         }
 
@@ -137,30 +137,19 @@ public class Bot extends TelegramLongPollingBot {
                     parser.parseProduct(product);
                     product = parser.getProduct();
                     personDAO.saveOrUpdatePerson(person, personMessage, product);
-                    sendText(userID, "Добавлен товар: " + product.getProductName());
-                    sendText(userID, "Цена: " + product.getCurrentPrice() + " р.");
+                    sendText(tgUserID, "Добавлен товар: " + product.getProductName());
+                    sendText(tgUserID, "Цена: " + product.getPrice() + " р.");
                 } catch (IllegalArgumentException e) {
-                    sendText(userID, "Укажите корректный артикул товара");
+                    sendText(tgUserID, "Укажите корректный артикул товара");
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 } catch (WebDriverException e) {
-                    sendText(userID, "Товар c артикулом " + product.getArticle() + " не найден");
+                    sendText(tgUserID, "Товар c артикулом " + product.getArticle() + " не найден");
                 }
             } else {
-                person.addProductToPerson(product);
-                person = personRepository.save(person);
-                RequestDetails requestDetails = new RequestDetails();
-                requestDetails.setProduct(product);
-                requestDetails.setStartPrice(product.getCurrentPrice());
-                requestDetails.setMessage(personMessage);
-                personMessage.setRequestDetails(requestDetails);
-                personMessage.setPerson(person);
-                person.addMessageToPerson(personMessage);
-
-                requestDetailsRepository.save(requestDetails);
-
-                sendText(userID, "Добавлен товар: " + product.getProductName());
-                sendText(userID, "Цена: " + product.getCurrentPrice() + " р.");
+                personDAO.saveOrUpdatePerson(person, personMessage, product);
+                sendText(tgUserID, "Добавлен товар: " + product.getProductName());
+                sendText(tgUserID, "Цена: " + product.getPrice() + " р.");
             }
             isArticle = false;
         }

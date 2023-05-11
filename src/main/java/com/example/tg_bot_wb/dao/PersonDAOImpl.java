@@ -4,7 +4,6 @@ import com.example.tg_bot_wb.entity.Message;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
-import com.example.tg_bot_wb.repository.PersonRepository;
 import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -15,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Repository
-public class PersonDAOImpl implements PersonDAO{
+public class PersonDAOImpl implements PersonDAO {
 
     @Autowired
     EntityManager entityManager;
@@ -38,25 +37,34 @@ public class PersonDAOImpl implements PersonDAO{
     @Transactional
     public void saveOrUpdatePerson(Person person, Message personMessage, Product product) {
 
-
+        product.addPersonToProduct(person);
+        product = entityManager.merge(product);
         RequestDetails requestDetails = new RequestDetails();
-        requestDetails.setProduct(product);
-        requestDetails.setStartPrice(product.getCurrentPrice());
+        requestDetails.setProduct(product.getId());
+        requestDetails.setStartPrice(product.getPrice());
+        requestDetails = entityManager.merge(requestDetails);
+        personMessage.setPerson(person);
+        personMessage.setRequestDetails(requestDetails);
+        entityManager.merge(personMessage);
 
+
+        /*entityManager.persist(product);
+        RequestDetails requestDetails = new RequestDetails();
+        requestDetails.setProduct(product.getId());
+        requestDetails.setStartPrice(product.getPrice());
+        requestDetails = requestDetailsRepository.save(requestDetails);
         personMessage.setRequestDetails(requestDetails);
         personMessage.setPerson(person);
         person.addMessageToPerson(personMessage);
         person.addProductToPerson(product);
-        product.addPersonToProduct(person);
-        requestDetails.setProduct(product);
 
-        entityManager.merge(person);
+        entityManager.merge(person);*/
     }
 
     @Override
     public void deletePerson(long id) {
         Person person = getPerson(id);
-        if (person!=null) {
+        if (person != null) {
             entityManager.remove(person);
         }
 

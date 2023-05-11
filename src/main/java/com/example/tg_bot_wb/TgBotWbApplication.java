@@ -41,7 +41,7 @@ public class TgBotWbApplication {
             , RequestDetailsDAO requestDetailsDAO) throws TelegramApiException {
 
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-        Bot bot = new Bot("888888888888888888888"
+        Bot bot = new Bot("6097077392:AAG4hsSfzcfXrRfFsL3INFCi-dehcHpH-EY"
                 , personRepository, productRepository
                 , messageRepository, requestDetailsRepository
                 , personDAO, productDAO, requestDetailsDAO);

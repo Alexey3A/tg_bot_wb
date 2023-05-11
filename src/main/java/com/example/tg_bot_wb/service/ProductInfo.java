@@ -1,15 +1,12 @@
 package com.example.tg_bot_wb.service;
 
-import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.repository.ProductRepository;
-import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ProductInfo {
@@ -32,7 +29,7 @@ public class ProductInfo {
             Product product = productList.get(i);
 //            try {
 //               product =  parser.parseProduct(product);
-                product.setCurrentPrice(product.getCurrentPrice()-500.0);
+                product.setPrice(product.getPrice()-500.0);
                productRepository.save(product);
                updateProductList.add(product);
            /* } catch (InterruptedException e) {
