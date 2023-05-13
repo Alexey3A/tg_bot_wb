@@ -1,9 +1,9 @@
 package com.example.tg_bot_wb;
 
+import com.example.tg_bot_wb.dao.MessageDAO;
 import com.example.tg_bot_wb.dao.PersonDAO;
 import com.example.tg_bot_wb.dao.ProductDAO;
 import com.example.tg_bot_wb.dao.RequestDetailsDAO;
-import com.example.tg_bot_wb.entity.Message;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
@@ -38,13 +38,15 @@ public class TgBotWbApplication {
             , MessageRepository messageRepository
             , RequestDetailsRepository requestDetailsRepository
             , ProductDAO productDAO, PersonDAO personDAO
-            , RequestDetailsDAO requestDetailsDAO) throws TelegramApiException {
+            , RequestDetailsDAO requestDetailsDAO
+            , MessageDAO messageDAO) throws TelegramApiException {
 
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-        Bot bot = new Bot("888888888888888888888"
+        Bot bot = new Bot("6097077392:AAG4hsSfzcfXrRfFsL3INFCi-dehcHpH-EY"
                 , personRepository, productRepository
                 , messageRepository, requestDetailsRepository
-                , personDAO, productDAO, requestDetailsDAO);
+                , personDAO, productDAO, requestDetailsDAO
+                , messageDAO);
         botsApi.registerBot(bot);
         bot.sendText(5124083894L, "Hi!");
 
@@ -68,6 +70,7 @@ public class TgBotWbApplication {
 
         return bot;
     }
+
 
 	/*@Bean
 	public Person getUser(ProductRepository productRepository) {

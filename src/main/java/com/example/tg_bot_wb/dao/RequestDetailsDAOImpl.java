@@ -24,7 +24,7 @@ public class RequestDetailsDAOImpl implements RequestDetailsDAO {
         person.addProductToPerson(product);
 //        requestDetails.setMessage(personMessage);
         personMessage.setRequestDetails(requestDetails);
-        personMessage.setPerson(person);
+//        personMessage.setPerson(person);
 
         entityManager.merge(requestDetails);
     }

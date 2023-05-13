@@ -38,7 +38,6 @@ public class PersonDAOImpl implements PersonDAO{
     @Transactional
     public void saveOrUpdatePerson(Person person, Message personMessage, Product product) {
 
-
         RequestDetails requestDetails = new RequestDetails();
         requestDetails.setProduct(product);
         requestDetails.setStartPrice(product.getCurrentPrice());

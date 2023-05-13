@@ -1,5 +1,6 @@
 package com.example.tg_bot_wb.service;
 
+import com.example.tg_bot_wb.dao.MessageDAO;
 import com.example.tg_bot_wb.dao.PersonDAO;
 import com.example.tg_bot_wb.dao.ProductDAO;
 import com.example.tg_bot_wb.dao.RequestDetailsDAO;
@@ -38,6 +39,7 @@ public class Bot extends TelegramLongPollingBot {
     private PersonDAO personDAO;
     private ProductDAO productDAO;
     private RequestDetailsDAO requestDetailsDAO;
+    private MessageDAO messageDAO;
     private boolean isArticle = false;
 
     public Bot(String botToken) {
@@ -49,7 +51,8 @@ public class Bot extends TelegramLongPollingBot {
             , MessageRepository messageRepository
             , RequestDetailsRepository requestDetailsRepository
             , PersonDAO personDAO, ProductDAO productDAO
-            , RequestDetailsDAO requestDetailsDAO) {
+            , RequestDetailsDAO requestDetailsDAO
+            , MessageDAO messageDAO) {
         super(botToken);
         this.personRepository = personRepository;
         this.productRepository = productRepository;
@@ -58,6 +61,7 @@ public class Bot extends TelegramLongPollingBot {
         this.personDAO = personDAO;
         this.productDAO = productDAO;
         this.requestDetailsDAO = requestDetailsDAO;
+        this.messageDAO = messageDAO;
     }
 
     public String getBotUsername() {
@@ -147,7 +151,7 @@ public class Bot extends TelegramLongPollingBot {
                     sendText(userID, "Товар c артикулом " + product.getArticle() + " не найден");
                 }
             } else {
-                person.addProductToPerson(product);
+               /* person.addProductToPerson(product);
                 person = personRepository.save(person);
                 RequestDetails requestDetails = new RequestDetails();
                 requestDetails.setProduct(product);
@@ -157,7 +161,9 @@ public class Bot extends TelegramLongPollingBot {
                 personMessage.setPerson(person);
                 person.addMessageToPerson(personMessage);
 
-                requestDetailsRepository.save(requestDetails);
+                requestDetailsRepository.save(requestDetails);*/
+
+                messageDAO.saveOrUpdateMessage(person, personMessage, product);
 
                 sendText(userID, "Добавлен товар: " + product.getProductName());
                 sendText(userID, "Цена: " + product.getCurrentPrice() + " р.");
