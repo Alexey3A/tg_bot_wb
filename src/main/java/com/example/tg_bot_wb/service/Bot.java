@@ -1,8 +1,5 @@
 package com.example.tg_bot_wb.service;
 
-import com.example.tg_bot_wb.dao.PersonDAO;
-import com.example.tg_bot_wb.dao.ProductDAO;
-import com.example.tg_bot_wb.dao.RequestDetailsDAO;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
@@ -11,6 +8,7 @@ import com.example.tg_bot_wb.repository.PersonRepository;
 import com.example.tg_bot_wb.repository.ProductRepository;
 import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import org.openqa.selenium.WebDriverException;
+import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -35,9 +33,6 @@ public class Bot extends TelegramLongPollingBot {
     private ProductRepository productRepository;
     private MessageRepository messageRepository;
     private RequestDetailsRepository requestDetailsRepository;
-    private PersonDAO personDAO;
-    private ProductDAO productDAO;
-    private RequestDetailsDAO requestDetailsDAO;
     private boolean isArticle = false;
 
     public Bot(String botToken) {
@@ -47,23 +42,19 @@ public class Bot extends TelegramLongPollingBot {
     public Bot(String botToken, PersonRepository personRepository
             , ProductRepository productRepository
             , MessageRepository messageRepository
-            , RequestDetailsRepository requestDetailsRepository
-            , PersonDAO personDAO, ProductDAO productDAO
-            , RequestDetailsDAO requestDetailsDAO) {
+            , RequestDetailsRepository requestDetailsRepository) {
         super(botToken);
         this.personRepository = personRepository;
         this.productRepository = productRepository;
         this.messageRepository = messageRepository;
         this.requestDetailsRepository = requestDetailsRepository;
-        this.personDAO = personDAO;
-        this.productDAO = productDAO;
-        this.requestDetailsDAO = requestDetailsDAO;
     }
 
     public String getBotUsername() {
         return "WbBot";
     }
 
+    @Transactional
     public void onUpdateReceived(Update update) {
 
         User user = null;
@@ -136,7 +127,15 @@ public class Bot extends TelegramLongPollingBot {
                 try {
                     parser.parseProduct(product);
                     product = parser.getProduct();
-                    personDAO.saveOrUpdatePerson(person, personMessage, product);
+                    product.addPersonToProduct(person);
+                    product = productRepository.save(product);
+                    RequestDetails requestDetails = new RequestDetails();
+                    requestDetails.setProduct(product.getId());
+                    requestDetails.setStartPrice(product.getPrice());
+                    requestDetails = requestDetailsRepository.save(requestDetails);
+                    personMessage.setPerson(person);
+                    personMessage.setRequestDetails(requestDetails);
+                    messageRepository.save(personMessage);
                     sendText(tgUserID, "Добавлен товар: " + product.getProductName());
                     sendText(tgUserID, "Цена: " + product.getPrice() + " р.");
                 } catch (IllegalArgumentException e) {
@@ -147,7 +146,17 @@ public class Bot extends TelegramLongPollingBot {
                     sendText(tgUserID, "Товар c артикулом " + product.getArticle() + " не найден");
                 }
             } else {
-                personDAO.saveOrUpdatePerson(person, personMessage, product);
+
+                product.addPersonToProduct(person);
+                product = productRepository.save(product);
+                RequestDetails requestDetails = new RequestDetails();
+                requestDetails.setProduct(product.getId());
+                requestDetails.setStartPrice(product.getPrice());
+                requestDetails = requestDetailsRepository.save(requestDetails);
+                personMessage.setPerson(person);
+                personMessage.setRequestDetails(requestDetails);
+                messageRepository.save(personMessage);
+
                 sendText(tgUserID, "Добавлен товар: " + product.getProductName());
                 sendText(tgUserID, "Цена: " + product.getPrice() + " р.");
             }

@@ -24,10 +24,7 @@ public class Person {
     @OneToMany(mappedBy = "person", cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
     private List<Message> messageList;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
-    @JoinTable(name = "product_person"
-            , joinColumns = @JoinColumn(name = "person_id")
-            , inverseJoinColumns = @JoinColumn(name = "product_id"))
+    @ManyToMany (fetch = FetchType.EAGER, mappedBy = "personList")
     private Set<Product> productList;
 
     public Person() {
