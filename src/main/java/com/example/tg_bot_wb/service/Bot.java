@@ -131,7 +131,7 @@ public class Bot extends TelegramLongPollingBot {
                     product = productRepository.save(product);
                     RequestDetails requestDetails = new RequestDetails();
                     requestDetails.setProduct(product.getId());
-                    requestDetails.setStartPrice(product.getPrice());
+                    requestDetails.setCurrentPrice(product.getPrice());
                     requestDetails = requestDetailsRepository.save(requestDetails);
                     personMessage.setPerson(person);
                     personMessage.setRequestDetails(requestDetails);
@@ -151,7 +151,7 @@ public class Bot extends TelegramLongPollingBot {
                 product = productRepository.save(product);
                 RequestDetails requestDetails = new RequestDetails();
                 requestDetails.setProduct(product.getId());
-                requestDetails.setStartPrice(product.getPrice());
+                requestDetails.setCurrentPrice(product.getPrice());
                 requestDetails = requestDetailsRepository.save(requestDetails);
                 personMessage.setPerson(person);
                 personMessage.setRequestDetails(requestDetails);

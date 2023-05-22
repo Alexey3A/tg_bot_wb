@@ -43,9 +43,10 @@ public class Notify {
                     Message message = messageList.get(j);
                     RequestDetails requestDetails = message.getRequestDetails();
                     if (requestDetails.getProduct() == product.getId()) {
-                        startPrice = requestDetails.getStartPrice();
-                        if (currentPrice != startPrice && currentPrice != requestDetails.getExpectedPrice()) {
-                            requestDetails.setExpectedPrice(currentPrice);
+                        startPrice = requestDetails.getCurrentPrice();
+                        if (currentPrice != startPrice) {
+                            requestDetails.setStartPrice(startPrice);
+                            requestDetails.setCurrentPrice(currentPrice);
                             requestDetailsRepository.save(requestDetails);
                             System.out.println(product.getProductName()
                                     + "  " + "изменение цены: " + startPrice + " -> " + currentPrice);
