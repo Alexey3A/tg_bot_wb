@@ -48,11 +48,17 @@ public class Notify {
                             requestDetails.setStartPrice(startPrice);
                             requestDetails.setCurrentPrice(currentPrice);
                             requestDetailsRepository.save(requestDetails);
-                            System.out.println(product.getProductName()
-                                    + "  " + "изменение цены: " + startPrice + " -> " + currentPrice);
-                            map.put(person
-                                    , product.getProductName()
-                                            + " \n" + "изменение цены: " + startPrice + " -> " + currentPrice);
+                            System.out.println(product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                                    + "изменение цены: " + startPrice + " -> " + currentPrice);
+                            if(currentPrice != -1) {
+                                map.put(person
+                                        , product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                                                + " \n" + "изменение цены: " + startPrice + " -> " + currentPrice);
+                            } else {
+                                map.put(person
+                                        , product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                                                + "\n" + "товара нет в наличии");
+                            }
                         }
                     }
                 }

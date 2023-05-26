@@ -3,6 +3,7 @@ package com.example.tg_bot_wb.service;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
+import com.example.tg_bot_wb.exeption.ProductAbsenceException;
 import com.example.tg_bot_wb.repository.MessageRepository;
 import com.example.tg_bot_wb.repository.PersonRepository;
 import com.example.tg_bot_wb.repository.ProductRepository;
@@ -22,10 +23,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class Bot extends TelegramLongPollingBot {
@@ -33,7 +31,9 @@ public class Bot extends TelegramLongPollingBot {
     private ProductRepository productRepository;
     private MessageRepository messageRepository;
     private RequestDetailsRepository requestDetailsRepository;
+    private ProductService productService;
     private boolean isArticle = false;
+    private boolean isDeleteArticle = false;
 
     public Bot(String botToken) {
         super(botToken);
@@ -42,12 +42,14 @@ public class Bot extends TelegramLongPollingBot {
     public Bot(String botToken, PersonRepository personRepository
             , ProductRepository productRepository
             , MessageRepository messageRepository
-            , RequestDetailsRepository requestDetailsRepository) {
+            , RequestDetailsRepository requestDetailsRepository
+            , ProductService productService) {
         super(botToken);
         this.personRepository = personRepository;
         this.productRepository = productRepository;
         this.messageRepository = messageRepository;
         this.requestDetailsRepository = requestDetailsRepository;
+        this.productService = productService;
     }
 
     public String getBotUsername() {
@@ -68,10 +70,15 @@ public class Bot extends TelegramLongPollingBot {
         long tgUserID = user.getId();
 
         System.out.println(update);
-        System.out.println(user.getFirstName() + " wrote " + msg.getText());
-
         String article = msg.getText();
-        System.out.println(article);
+        System.out.println(user.getFirstName() + " wrote " + article);
+
+
+        if (!isArticle && !article.equals("Добавить товар")
+                && !article.equals("Мой список товаров")
+                && !article.equals("Удалить товар")) {
+            sendText(tgUserID, "Выберите из меню, что нужно сделать");
+        }
 
         com.example.tg_bot_wb.entity.Message personMessage = new com.example.tg_bot_wb.entity.Message(article, System.currentTimeMillis());
         Person person = personRepository.findByTgUserID(tgUserID);
@@ -91,35 +98,25 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        if (msg.getText().equals("Добавить товар")) {
+        if (article.equals("Добавить товар") || article.equals("Удалить товар")) {
             isArticle = true;
-            SendMessage sendMessage = SendMessage.builder()
-                    .chatId(user.getId().toString())
-                    .text("Укажите артикул товара").build();
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException();
-            }
+            if (article.equals("Удалить товар")) isDeleteArticle = true;
+            sendText(tgUserID, "Укажите артикул товара");
+
         }
-        if (msg.getText().equals("Мой список товаров")) {
+
+        if (article.equals("Мой список товаров")) {
             isArticle = false;
             String productList = person.getProductList().toString();
             if (productList != null) {
-                SendMessage sendMessage = SendMessage.builder()
-                        .chatId(user.getId().toString())
-                        .text(productList).build();
-                try {
-                    execute(sendMessage);
-                } catch (TelegramApiException e) {
-                    throw new RuntimeException();
-                }
+                sendText(tgUserID, productList);
             } else {
                 sendText(tgUserID, "Список пустой. Нажмите кнопку \"Добавить товар\"");
             }
         }
 
-        if (isArticle && !article.equals("Добавить товар")) {
+        if (isArticle && !isDeleteArticle
+                && !article.equals("Добавить товар")) {
 
             if (product == null) {
                 product = new Product(article);
@@ -127,17 +124,14 @@ public class Bot extends TelegramLongPollingBot {
                 try {
                     parser.parseProduct(product);
                     product = parser.getProduct();
-                    product.addPersonToProduct(person);
-                    product = productRepository.save(product);
-                    RequestDetails requestDetails = new RequestDetails();
-                    requestDetails.setProduct(product.getId());
-                    requestDetails.setCurrentPrice(product.getPrice());
-                    requestDetails = requestDetailsRepository.save(requestDetails);
-                    personMessage.setPerson(person);
-                    personMessage.setRequestDetails(requestDetails);
-                    messageRepository.save(personMessage);
-                    sendText(tgUserID, "Добавлен товар: " + product.getProductName());
-                    sendText(tgUserID, "Цена: " + product.getPrice() + " р.");
+                    productService.saveProduct(product, person, personMessage);
+                    if (product.getPrice() != -1.0) {
+                        sendText(tgUserID, "Добавлен товар: " + product.getProductName() + " (артикул: " + product.getArticle()
+                                + "\n" + "Цена: " + product.getPrice() + " р.");
+                    } else {
+                        sendText(tgUserID, "Добавлен товар: " + product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                                + "\n" + "Цена: товара нет в наличии");
+                    }
                 } catch (IllegalArgumentException e) {
                     sendText(tgUserID, "Укажите корректный артикул товара");
                 } catch (InterruptedException e) {
@@ -146,26 +140,33 @@ public class Bot extends TelegramLongPollingBot {
                     sendText(tgUserID, "Товар c артикулом " + product.getArticle() + " не найден");
                 }
             } else {
-
-                product.addPersonToProduct(person);
-                product = productRepository.save(product);
-                RequestDetails requestDetails = new RequestDetails();
-                requestDetails.setProduct(product.getId());
-                requestDetails.setCurrentPrice(product.getPrice());
-                requestDetails = requestDetailsRepository.save(requestDetails);
-                personMessage.setPerson(person);
-                personMessage.setRequestDetails(requestDetails);
-                messageRepository.save(personMessage);
-
-                sendText(tgUserID, "Добавлен товар: " + product.getProductName());
-                sendText(tgUserID, "Цена: " + product.getPrice() + " р.");
+                product = productService.saveProduct(product, person, personMessage);
+                if (product.getPrice() != -1.0) {
+                    sendText(tgUserID, "Добавлен товар: " + product.getProductName() + " (артикул: " + product.getArticle()
+                            + "\n" + "Цена: " + product.getPrice() + " р.");
+                } else {
+                    sendText(tgUserID, "Добавлен товар: " + product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                            + "\n" + "Цена: товара нет в наличии");
+                }
             }
             isArticle = false;
         }
+
+        if (isDeleteArticle && isArticle && !article.equals("Удалить товар")) {
+            try {
+                productService.delete(person, article);
+                sendText(tgUserID, "Удален: " + product);
+                System.out.println("Должно было произойти удаление товара у пользователя");
+            } catch (ProductAbsenceException e) {
+                System.out.println(e.getMessage());
+                sendText(tgUserID, "Товар с артикулом " + article + " в вашем списке отсутствует");
+            }
+            isDeleteArticle = false;
+            isArticle = false;
+        }
+
         if (update.hasCallbackQuery()) {
-
             CallbackQuery callbackQuery = update.getCallbackQuery();
-
             try {
                 buttonTap(callbackQuery);
             } catch (TelegramApiException e) {
@@ -207,18 +208,6 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    public void sendMenu(Long who, String txt, InlineKeyboardMarkup kb) {
-        SendMessage sm = SendMessage.builder().chatId(who.toString())
-                .parseMode("HTML").text(txt)
-                .replyMarkup(kb).build();
-
-        try {
-            execute(sm);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public void sendMenu(Message msg) {
 
         // Создаем клавиатуру
@@ -242,9 +231,14 @@ public class Bot extends TelegramLongPollingBot {
         // Добавляем кнопки во вторую строчку клавиатуры
         keyboardSecondRow.add("Добавить товар");
 
+        KeyboardRow keyboardThirdRow = new KeyboardRow();
+        // Добавляем кнопки в третью строчку клавиатуры
+        keyboardSecondRow.add("Удалить товар");
+
         // Добавляем все строчки клавиатуры в список
         keyboard.add(keyboardFirstRow);
         keyboard.add(keyboardSecondRow);
+        keyboard.add(keyboardThirdRow);
         // и устанавливаем этот список нашей клавиатуре
         replyKeyboardMarkup.setKeyboard(keyboard);
 

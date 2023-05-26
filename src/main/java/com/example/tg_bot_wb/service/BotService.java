@@ -6,6 +6,7 @@ import com.example.tg_bot_wb.repository.PersonRepository;
 import com.example.tg_bot_wb.repository.ProductRepository;
 import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import jakarta.annotation.PostConstruct;
+import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -36,7 +37,7 @@ public class BotService {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
         botsApi.registerBot(bot);
 
-        bot.sendText(8888888888888888L, "Hi!");
+        bot.sendText(5124083894L, "Hi!");
 
         Runnable r = () -> {
             while (true) {
@@ -47,7 +48,7 @@ public class BotService {
                 System.out.println("privet");
 
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(350000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -60,14 +61,16 @@ public class BotService {
                 for(Product product : productList) {
                     try {
                         product = new Parser(product).parseProduct(product);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                    } catch (InterruptedException e1) {
+                        throw new RuntimeException(e1);
+                    } catch (WebDriverException e2) {
+                        System.out.println(e2.getMessage());
                     }
                     productRepository.save(product);
                 }
 
                 try {
-                    Thread.sleep(50000);
+                    Thread.sleep(1200000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -80,3 +83,6 @@ public class BotService {
         thread2.start();
     }
 }
+
+
+

@@ -45,8 +45,14 @@ public class Parser {
                             .className("product-page__aside-sticky")).findElement(By.tagName("p"))
                     .getText();
 
+            Thread.sleep(1000);
+
             price = price.replaceAll("\\s", "");
-            price = price.substring(0, price.indexOf("₽"));
+            try{
+                price = price.substring(0, price.indexOf("₽"));
+            } catch (StringIndexOutOfBoundsException e) {       // если товара нет в наличии, то ему присваевается цена "-1"
+                price = "-1";
+            }
             double doublePrice = Double.parseDouble(price);
             System.out.println(price);
             product.setPrice(doublePrice);
