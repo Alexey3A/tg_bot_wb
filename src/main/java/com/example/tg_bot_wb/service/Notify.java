@@ -4,32 +4,31 @@ import com.example.tg_bot_wb.entity.Message;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
-import com.example.tg_bot_wb.repository.PersonRepository;
-import com.example.tg_bot_wb.repository.ProductRepository;
-import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class Notify {
-    @Autowired
-    private final PersonRepository personRepository;
-    private final ProductRepository productRepository;
-    @Autowired
-    private final RequestDetailsRepository requestDetailsRepository;
 
-    public Notify(PersonRepository personRepository, ProductRepository productRepository, RequestDetailsRepository requestDetailsRepository) {
-        this.personRepository = personRepository;
-        this.productRepository = productRepository;
-        this.requestDetailsRepository = requestDetailsRepository;
+    private final PersonService personService;
+    private final ProductService productService;
+    private final RequestDetailsService requestDetailsService;
+
+    @Autowired
+    public Notify(PersonService personService, ProductService productService, RequestDetailsService requestDetailsService) {
+        this.personService = personService;
+        this.productService = productService;
+        this.requestDetailsService = requestDetailsService;
     }
 
     public Map<Person, String> notificationForPerson(){
         Map<Person, String> map = new HashMap<>();
-        List<Person> personList = personRepository.findAll();
-        List<Product> productList = productRepository.findAll();
+        List<Person> personList = personService.findAllPerson();
+        List<Product> productList = productService.findAllProduct();
 
         for (int i = 0; i < productList.size(); i++){
             double startPrice = 0;
@@ -47,7 +46,7 @@ public class Notify {
                         if (currentPrice != startPrice) {
                             requestDetails.setStartPrice(startPrice);
                             requestDetails.setCurrentPrice(currentPrice);
-                            requestDetailsRepository.save(requestDetails);
+                            requestDetailsService.saveRequestDetails(requestDetails);
                             System.out.println(product.getProductName() + " (артикул: " + product.getArticle() + ") "
                                     + "изменение цены: " + startPrice + " -> " + currentPrice);
                             if(currentPrice != -1) {

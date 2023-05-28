@@ -5,7 +5,6 @@ import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 
 @Service
 public class RequestDetailsServiceImpl implements RequestDetailsService{
@@ -17,8 +16,8 @@ public class RequestDetailsServiceImpl implements RequestDetailsService{
 
     @Override
     @Transactional
-    public void saveRequestDetails(RequestDetails requestDetails) {
-        requestDetailsRepository.save(requestDetails);
+    public RequestDetails saveRequestDetails(RequestDetails requestDetails) {
+        return requestDetailsRepository.save(requestDetails);
     }
 
 }

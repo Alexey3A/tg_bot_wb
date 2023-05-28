@@ -1,4 +1,4 @@
-package com.example.tg_bot_wb.exeption;
+package com.example.tg_bot_wb.exсeption;
 
 public class ProductAbsenceException extends RuntimeException{
 

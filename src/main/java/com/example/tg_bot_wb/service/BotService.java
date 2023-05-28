@@ -2,9 +2,6 @@ package com.example.tg_bot_wb.service;
 
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
-import com.example.tg_bot_wb.repository.PersonRepository;
-import com.example.tg_bot_wb.repository.ProductRepository;
-import com.example.tg_bot_wb.repository.RequestDetailsRepository;
 import jakarta.annotation.PostConstruct;
 import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,16 +17,14 @@ import java.util.Map;
 public class BotService {
 
     private  final Bot bot;
-    private final PersonRepository personRepository;
-    private final RequestDetailsRepository requestDetailsRepository;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
+    private final Notify notify;
 
     @Autowired
-    public BotService(Bot bot, PersonRepository personRepository, RequestDetailsRepository requestDetailsRepository, ProductRepository productRepository) {
+    public BotService(Bot bot, ProductService productService, Notify notify) {
         this.bot = bot;
-        this.personRepository = personRepository;
-        this.requestDetailsRepository = requestDetailsRepository;
-        this.productRepository = productRepository;
+        this.productService = productService;
+        this.notify = notify;
     }
 
     @PostConstruct
@@ -41,7 +36,6 @@ public class BotService {
 
         Runnable r = () -> {
             while (true) {
-                Notify notify = new Notify(personRepository, productRepository, requestDetailsRepository);
                 Map<Person, String> messageForPerson = notify.notificationForPerson();
                 bot.sendAPriceChangeNotification(messageForPerson);
 
@@ -57,7 +51,7 @@ public class BotService {
 
         Runnable r2 = () -> {
             while (true) {
-                List<Product> productList = productRepository.findAll();
+                List<Product> productList = productService.findAllProduct();
                 for(Product product : productList) {
                     try {
                         product = new Parser(product).parseProduct(product);
@@ -66,7 +60,7 @@ public class BotService {
                     } catch (WebDriverException e2) {
                         System.out.println(e2.getMessage());
                     }
-                    productRepository.save(product);
+                    productService.saveProduct(product);
                 }
 
                 try {

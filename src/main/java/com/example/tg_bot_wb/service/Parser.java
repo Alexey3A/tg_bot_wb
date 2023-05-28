@@ -21,7 +21,7 @@ public class Parser {
     }
 
     public Product parseProduct(Product product) throws InterruptedException {
-        System.setProperty("webdriver.chrome.driver", "C://IdeaProjects/chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "G://IdeaProjects/chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--start-maximized");

@@ -4,11 +4,12 @@ import com.example.tg_bot_wb.entity.Message;
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.entity.RequestDetails;
-import com.example.tg_bot_wb.exeption.ProductAbsenceException;
+import com.example.tg_bot_wb.exсeption.ProductAbsenceException;
 import com.example.tg_bot_wb.repository.MessageRepository;
 import com.example.tg_bot_wb.repository.PersonRepository;
 import com.example.tg_bot_wb.repository.ProductRepository;
 import com.example.tg_bot_wb.repository.RequestDetailsRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ public class ProductServiceImpl implements ProductService {
     private final PersonRepository personRepository;
     private final MessageRepository messageRepository;
 
+    @Autowired
     public ProductServiceImpl(ProductRepository productRepository
             , RequestDetailsRepository requestDetailsRepository
             , PersonRepository personRepository
@@ -42,6 +44,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    public Product findByArticle(String article){
+        return productRepository.findByArticle(article);
+    }
+
+    @Override
+    @Transactional
     public Product saveProduct(Product product, Person person, Message message) {
         product.addPersonToProduct(person);
         product = productRepository.save(product);
@@ -56,6 +64,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
+    public Product saveProduct(Product product){
+        return productRepository.save(product);
+    }
+
+    @Override
+    @Transactional
     public void delete(Person person, String article) {
         Product pp = productRepository.findByArticle(article);
         if (pp != null) {

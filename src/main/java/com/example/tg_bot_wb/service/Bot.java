@@ -2,13 +2,9 @@ package com.example.tg_bot_wb.service;
 
 import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
-import com.example.tg_bot_wb.entity.RequestDetails;
-import com.example.tg_bot_wb.exeption.ProductAbsenceException;
-import com.example.tg_bot_wb.repository.MessageRepository;
-import com.example.tg_bot_wb.repository.PersonRepository;
-import com.example.tg_bot_wb.repository.ProductRepository;
-import com.example.tg_bot_wb.repository.RequestDetailsRepository;
+import com.example.tg_bot_wb.exсeption.ProductAbsenceException;
 import org.openqa.selenium.WebDriverException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -18,7 +14,6 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -27,28 +22,17 @@ import java.util.*;
 
 
 public class Bot extends TelegramLongPollingBot {
-    private PersonRepository personRepository;
-    private ProductRepository productRepository;
-    private MessageRepository messageRepository;
-    private RequestDetailsRepository requestDetailsRepository;
-    private ProductService productService;
+
+    private final PersonService personService;
+    private final ProductService productService;
     private boolean isArticle = false;
     private boolean isDeleteArticle = false;
+    private boolean isAdmin = false;
 
-    public Bot(String botToken) {
+    @Autowired
+    public Bot(String botToken, PersonService personService, ProductService productService) {
         super(botToken);
-    }
-
-    public Bot(String botToken, PersonRepository personRepository
-            , ProductRepository productRepository
-            , MessageRepository messageRepository
-            , RequestDetailsRepository requestDetailsRepository
-            , ProductService productService) {
-        super(botToken);
-        this.personRepository = personRepository;
-        this.productRepository = productRepository;
-        this.messageRepository = messageRepository;
-        this.requestDetailsRepository = requestDetailsRepository;
+        this.personService = personService;
         this.productService = productService;
     }
 
@@ -76,18 +60,20 @@ public class Bot extends TelegramLongPollingBot {
 
         if (!isArticle && !article.equals("Добавить товар")
                 && !article.equals("Мой список товаров")
-                && !article.equals("Удалить товар")) {
+                && !article.equals("Удалить товар")
+                && !article.equals("сообщение для всех")) {
             sendText(tgUserID, "Выберите из меню, что нужно сделать");
         }
 
         com.example.tg_bot_wb.entity.Message personMessage = new com.example.tg_bot_wb.entity.Message(article, System.currentTimeMillis());
-        Person person = personRepository.findByTgUserID(tgUserID);
+        Person person = personService.findByTgUserID(tgUserID);
 
         if (person == null) {
             person = new Person(user.getFirstName(), tgUserID);
-            person = personRepository.save(person);
+            person = personService.savePerson(person);
         }
-        Product product = productRepository.findByArticle(article);
+        Product product = productService.findByArticle(article);
+
 
         if (msg.isCommand()) {
             var txt = msg.getText();
@@ -115,8 +101,22 @@ public class Bot extends TelegramLongPollingBot {
             }
         }
 
+        // Сообщение от администратора для всех пользователей
+        if (article.equals("сообщение для всех") && tgUserID == 5124083894L) {
+            isAdmin = true;
+            sendText(tgUserID, "Напишите сообщение для всех");
+        }
+
+        if (!article.equals("сообщение для всех") && tgUserID == 5124083894L && isAdmin) {
+            for (Person p : personService.findAllPerson()) {
+                sendText(p.getTgUserID(), article);
+            }
+            isAdmin = false;
+        }
+
         if (isArticle && !isDeleteArticle
-                && !article.equals("Добавить товар")) {
+                && !article.equals("Добавить товар")
+                && !isAdmin) {
 
             if (product == null) {
                 product = new Product(article);
@@ -230,15 +230,21 @@ public class Bot extends TelegramLongPollingBot {
         KeyboardRow keyboardSecondRow = new KeyboardRow();
         // Добавляем кнопки во вторую строчку клавиатуры
         keyboardSecondRow.add("Добавить товар");
+        keyboardSecondRow.add("Удалить товар");
 
         KeyboardRow keyboardThirdRow = new KeyboardRow();
         // Добавляем кнопки в третью строчку клавиатуры
-        keyboardSecondRow.add("Удалить товар");
+        keyboardThirdRow.add("сообщение для всех");
 
         // Добавляем все строчки клавиатуры в список
         keyboard.add(keyboardFirstRow);
         keyboard.add(keyboardSecondRow);
-        keyboard.add(keyboardThirdRow);
+
+        // кнопка администратора для отправления сообщения всем пользователям
+        if (msg.getFrom().getId() == 5124083894L) {
+            keyboard.add(keyboardThirdRow);
+        }
+
         // и устанавливаем этот список нашей клавиатуре
         replyKeyboardMarkup.setKeyboard(keyboard);
 
