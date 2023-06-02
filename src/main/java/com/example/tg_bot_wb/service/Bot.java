@@ -5,6 +5,7 @@ import com.example.tg_bot_wb.entity.Product;
 import com.example.tg_bot_wb.exсeption.ProductAbsenceException;
 import org.openqa.selenium.WebDriverException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -28,6 +29,8 @@ public class Bot extends TelegramLongPollingBot {
     private boolean isArticle = false;
     private boolean isDeleteArticle = false;
     private boolean isAdmin = false;
+    @Value("${bot.adminId}")
+    private long  adminId;
 
     @Autowired
     public Bot(String botToken, PersonService personService, ProductService productService) {
@@ -38,6 +41,10 @@ public class Bot extends TelegramLongPollingBot {
 
     public String getBotUsername() {
         return "WbBot";
+    }
+
+    public long getAdminId() {
+        return adminId;
     }
 
     @Transactional
@@ -57,7 +64,6 @@ public class Bot extends TelegramLongPollingBot {
         String article = msg.getText();
         System.out.println(user.getFirstName() + " wrote " + article);
 
-
         if (!isArticle && !article.equals("Добавить товар")
                 && !article.equals("Мой список товаров")
                 && !article.equals("Удалить товар")
@@ -74,7 +80,6 @@ public class Bot extends TelegramLongPollingBot {
         }
         Product product = productService.findByArticle(article);
 
-
         if (msg.isCommand()) {
             var txt = msg.getText();
             if (txt.equals("/menu")) {
@@ -88,7 +93,6 @@ public class Bot extends TelegramLongPollingBot {
             isArticle = true;
             if (article.equals("Удалить товар")) isDeleteArticle = true;
             sendText(tgUserID, "Укажите артикул товара");
-
         }
 
         if (article.equals("Мой список товаров")) {
@@ -102,12 +106,12 @@ public class Bot extends TelegramLongPollingBot {
         }
 
         // Сообщение от администратора для всех пользователей
-        if (article.equals("сообщение для всех") && tgUserID == 5124083894L) {
+        if (article.equals("сообщение для всех") && tgUserID ==  adminId) {
             isAdmin = true;
             sendText(tgUserID, "Напишите сообщение для всех");
         }
 
-        if (!article.equals("сообщение для всех") && tgUserID == 5124083894L && isAdmin) {
+        if (!article.equals("сообщение для всех") && tgUserID == adminId && isAdmin) {
             for (Person p : personService.findAllPerson()) {
                 sendText(p.getTgUserID(), article);
             }
@@ -117,7 +121,6 @@ public class Bot extends TelegramLongPollingBot {
         if (isArticle && !isDeleteArticle
                 && !article.equals("Добавить товар")
                 && !isAdmin) {
-
             if (product == null) {
                 product = new Product(article);
                 Parser parser = new Parser(product);
@@ -154,7 +157,8 @@ public class Bot extends TelegramLongPollingBot {
 
         if (isDeleteArticle && isArticle && !article.equals("Удалить товар")) {
             try {
-                productService.delete(person, article);
+                productService.deleteProductFromPerson(person, article);
+                productService.deleteProduct(article);
                 sendText(tgUserID, "Удален: " + product);
                 System.out.println("Должно было произойти удаление товара у пользователя");
             } catch (ProductAbsenceException e) {
@@ -241,7 +245,7 @@ public class Bot extends TelegramLongPollingBot {
         keyboard.add(keyboardSecondRow);
 
         // кнопка администратора для отправления сообщения всем пользователям
-        if (msg.getFrom().getId() == 5124083894L) {
+        if (msg.getFrom().getId() == adminId) {
             keyboard.add(keyboardThirdRow);
         }
 

@@ -71,7 +71,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public void delete(Person person, String article) {
+    public void deleteProductFromPerson(Person person, String article) {
         Product pp = productRepository.findByArticle(article);
         if (pp != null) {
             Set<Product> personProducts = person.getProductList();
@@ -100,6 +100,15 @@ public class ProductServiceImpl implements ProductService {
         } else throw new ProductAbsenceException();
 
         pp = productRepository.findByArticle(article);
+        if (pp.getPersonList().isEmpty()) {
+            productRepository.delete(pp);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteProduct(String article) {
+       Product pp = productRepository.findByArticle(article);
         if (pp.getPersonList().isEmpty()) {
             productRepository.delete(pp);
         }

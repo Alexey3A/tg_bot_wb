@@ -32,7 +32,7 @@ public class BotService {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
         botsApi.registerBot(bot);
 
-        bot.sendText(5124083894L, "Hi!");
+        bot.sendText(bot.getAdminId(), "Hi!");
 
         Runnable r = () -> {
             while (true) {

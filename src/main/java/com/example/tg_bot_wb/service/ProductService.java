@@ -11,5 +11,6 @@ public interface ProductService {
     Product findByArticle(String article);
     Product saveProduct(Product product, Person person, Message message);
     Product saveProduct(Product product);
-    void delete(Person person, String article);
+    void deleteProductFromPerson(Person person, String article);
+    void deleteProduct(String article);
 }
