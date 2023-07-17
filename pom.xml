@@ -15,7 +15,7 @@
 	<name>tg_bot_wb</name>
 	<description>Telegram bot for wildberries</description>
 	<properties>
-		<java.version>19</java.version>
+		<java.version>17</java.version>
 		<start-class>com.example.tg_bot_wb.TgBotWbApplication</start-class>
 	</properties>
 	<dependencies>
