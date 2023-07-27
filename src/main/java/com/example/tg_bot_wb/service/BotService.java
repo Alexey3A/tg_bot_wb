@@ -1,6 +1,5 @@
 package com.example.tg_bot_wb.service;
 
-import com.example.tg_bot_wb.entity.Person;
 import com.example.tg_bot_wb.entity.Product;
 import jakarta.annotation.PostConstruct;
 import org.openqa.selenium.WebDriverException;
@@ -11,7 +10,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class BotService {
@@ -36,13 +34,10 @@ public class BotService {
 
         Runnable r = () -> {
             while (true) {
-                Map<Person, String> messageForPerson = notify.notificationForPerson();
-                bot.sendAPriceChangeNotification(messageForPerson);
-
+                notify.notificationForPerson();
                 System.out.println("privet");
-
                 try {
-                    Thread.sleep(350000);
+                    Thread.sleep(300000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -62,9 +57,8 @@ public class BotService {
                     }
                     productService.saveProduct(product);
                 }
-
                 try {
-                    Thread.sleep(1200000);
+                    Thread.sleep(2500000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

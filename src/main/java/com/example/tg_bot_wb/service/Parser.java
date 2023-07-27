@@ -26,7 +26,8 @@ public class Parser {
     }
 
     public Product parseProduct(Product product) throws InterruptedException {
-       /* System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
+
+            /*System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--start-maximized");
@@ -45,26 +46,43 @@ public class Parser {
             throw new RuntimeException(e);
         }
         WebDriver driver = new RemoteWebDriver(url, dc);
-        //       driver.manage().window().maximize();
+
+        driver.manage().window().maximize();
 
         String article = product.getArticle();
         driver.get(URL);
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(1000);
             driver.findElement(new By.ByXPath("/html/body/div[1]/header/div/div[2]/div[3]/div[1]/input"))
                     .sendKeys(article);
             driver.findElement(By.id("applySearchBtn")).click();
 
-            Thread.sleep(4000);
+            Thread.sleep(1000);
 
-            String productName = driver.findElement(By.tagName("h1")).getText();
+            String productName = driver.findElement(By.xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[5]/div[1]/h1"))
+//                    driver.findElement(By.tagName("h1"))
+                    .getText();
+
+            System.out.println(productName);
+
             product.setProductName(productName);
 
-            String price = driver.findElement(By
-                            //                           .className("product-page__aside-sticky")).findElement(By.tagName("p"))
-                            .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div/div/div/p/span/ins"))
-                    .getText();
+            String price;
+
+            try {
+                price = driver.findElement(By
+//                                                       .className("product-page__aside-sticky")).findElement(By.tagName("p"))
+                                .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div/div/div/p/span"))
+                        .getText();
+            } catch (WebDriverException e) {
+                price = driver.findElement(By
+//                                                       .className("product-page__aside-sticky")).findElement(By.tagName("p"))
+                                .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div/p/span"))
+                        .getText();
+            }
+
+            System.out.println(price);
 
             Thread.sleep(1000);
 
@@ -88,7 +106,6 @@ public class Parser {
             driver.quit();
             throw new WebDriverException();
         }
-
         driver.quit();
         return product;
     }

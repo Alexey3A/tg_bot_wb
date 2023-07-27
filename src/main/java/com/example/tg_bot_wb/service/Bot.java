@@ -31,6 +31,9 @@ public class Bot extends TelegramLongPollingBot {
     private boolean isAdmin = false;
     @Value("${bot.adminId}")
     private long  adminId;
+    private static final String infoCommand = "Бот предоставляет информацию о стоимости товаров без учета вашей индивидуальной скидки на Wildberries. \n"
+              + "Чтобы добавить товар к списку интересующих вас товаров, нажмите кнопку \"Добавить товар\" и укажите артикул товара. Если цена товара измениться, то бот пришлет вам уведомление. \n"
+              + "Все сведения, предоставляемые ботом, носят информационный характер.\n Возможна рассылка рекламы.";
 
     @Autowired
     public Bot(String botToken, PersonService personService, ProductService productService) {
@@ -58,6 +61,7 @@ public class Bot extends TelegramLongPollingBot {
             user = msg.getFrom();
         }
 
+        assert user != null;
         long tgUserID = user.getId();
 
         System.out.println(update);
@@ -85,6 +89,8 @@ public class Bot extends TelegramLongPollingBot {
             if (txt.equals("/menu")) {
                 isArticle = false;
                 sendMenu(msg);
+            } else if (txt.equals("/info")){
+                sendText(tgUserID, infoCommand);
             }
             return;
         }
@@ -266,12 +272,19 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    public void sendAPriceChangeNotification(Map<Person, String> messageForPerson) {
-        Set<Map.Entry<Person, String>> set = messageForPerson.entrySet();
-        for (Map.Entry<Person, String> entry : set) {
+    public void sendAPriceChangeNotification(Map<Person, List<String>> messageForPerson) {
+        Set<Map.Entry<Person, List<String>>> set = messageForPerson.entrySet();
+        for (Map.Entry<Person, List<String>> entry : set) {
             Person person = entry.getKey();
-            String message = entry.getValue();
-            sendText(person.getTgUserID(), message);
+            List<String> messages = entry.getValue();
+            for (String message : messages){
+                sendText(person.getTgUserID(), message);
+            }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

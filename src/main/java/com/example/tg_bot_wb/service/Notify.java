@@ -7,6 +7,7 @@ import com.example.tg_bot_wb.entity.RequestDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,52 +18,47 @@ public class Notify {
     private final PersonService personService;
     private final ProductService productService;
     private final RequestDetailsService requestDetailsService;
+    private final Bot bot;
 
     @Autowired
-    public Notify(PersonService personService, ProductService productService, RequestDetailsService requestDetailsService) {
+    public Notify(PersonService personService, ProductService productService, RequestDetailsService requestDetailsService, Bot bot) {
         this.personService = personService;
         this.productService = productService;
         this.requestDetailsService = requestDetailsService;
+        this.bot = bot;
     }
 
-    public Map<Person, String> notificationForPerson(){
-        Map<Person, String> map = new HashMap<>();
+    public void notificationForPerson(){
         List<Person> personList = personService.findAllPerson();
         List<Product> productList = productService.findAllProduct();
 
-        for (int i = 0; i < productList.size(); i++){
-            double startPrice = 0;
-            double currentPrice = 0;
-            Product product = productList.get(i);
-            currentPrice = product.getPrice();
-            for (int k = 0; k < personList.size(); k++){
-                Person person = personList.get(k);
+        for (Product product : productList) {
+            double currentPrice = product.getPrice();
+            for (Person person : personList) {
                 List<Message> messageList = person.getMessageList();
-                for (int j = 0; j < messageList.size(); j++){
-                    Message message = messageList.get(j);
+                for (Message message : messageList) {
                     RequestDetails requestDetails = message.getRequestDetails();
                     if (requestDetails.getProduct() == product.getId()) {
-                        startPrice = requestDetails.getCurrentPrice();
+                        double startPrice = requestDetails.getCurrentPrice();
                         if (currentPrice != startPrice) {
                             requestDetails.setStartPrice(startPrice);
                             requestDetails.setCurrentPrice(currentPrice);
                             requestDetailsService.saveRequestDetails(requestDetails);
                             System.out.println(product.getProductName() + " (артикул: " + product.getArticle() + ") "
                                     + "изменение цены: " + startPrice + " -> " + currentPrice);
-                            if(currentPrice != -1) {
-                                map.put(person
-                                        , product.getProductName() + " (артикул: " + product.getArticle() + ") "
-                                                + " \n" + "изменение цены: " + startPrice + " -> " + currentPrice);
+                            if (currentPrice != -1) {
+                                String s = product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                                        + " \n" + "изменение цены: " + startPrice + " -> " + currentPrice;
+                                bot.sendText(person.getTgUserID(), s);
                             } else {
-                                map.put(person
-                                        , product.getProductName() + " (артикул: " + product.getArticle() + ") "
-                                                + "\n" + "товара нет в наличии");
+                                String s = product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                                        + "\n" + "товара нет в наличии";
+                                bot.sendText(person.getTgUserID(), s);
                             }
                         }
                     }
                 }
             }
         }
-        return map;
     }
 }

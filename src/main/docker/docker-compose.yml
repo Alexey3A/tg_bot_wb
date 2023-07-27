@@ -25,7 +25,8 @@ services:
       - POSTGRES_PASSWORD=postgres
 
   chrome:
-    image: selenium/node-chrome:4.10.0-20230607
+                                #4.10.0-20230607
+    image: selenium/node-chrome:latest
     shm_size: 2gb
     depends_on:
       - selenium-hub
