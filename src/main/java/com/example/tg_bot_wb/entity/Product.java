@@ -3,7 +3,6 @@ package com.example.tg_bot_wb.entity;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -20,10 +19,10 @@ public class Product {
     private String productName;
     @Column(name = "category")
     private String category;
-    @Column(name = "current_price")
-    private double currentPrice;
+    @Column(name = "price")
+    private double price;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "product_person"
             , joinColumns = @JoinColumn(name = "product_id")
             , inverseJoinColumns = @JoinColumn(name = "person_id"))
@@ -80,12 +79,12 @@ public class Product {
         this.productName = productName;
     }
 
-    public double getCurrentPrice() {
-        return currentPrice;
+    public double getPrice() {
+        return price;
     }
 
-    public void setCurrentPrice(double currentPrice) {
-        this.currentPrice = currentPrice;
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     public Set<Person> getPersonList() {
@@ -113,6 +112,6 @@ public class Product {
     public String toString() {
         return productName +
                 ", артикул: " + article +
-                ", текущая цена: " + currentPrice + "\n";
+                ", текущая цена: " + price + "\n";
     }
 }

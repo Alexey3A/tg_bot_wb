@@ -19,7 +19,7 @@ public class Message {
     @JoinColumn(name = "person_id")
     private Person person;
 
-    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.REMOVE}
             , fetch = FetchType.EAGER)
     @JoinColumn(name = "request_details_id")
     private RequestDetails requestDetails;

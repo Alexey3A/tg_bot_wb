@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.util.*;
 
 @Entity
-@Table(name="person")
+@Table(name = "person")
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,13 +18,14 @@ public class Person {
     private String lastName;
     @Column(name = "user_name")
     private String userName;
-    @Column(name =  "is_bot")
+    @Column(name = "is_bot")
     private boolean isBot;
 
     @OneToMany(mappedBy = "person", cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
     private List<Message> messageList;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
+    //    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "personList")
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "product_person"
             , joinColumns = @JoinColumn(name = "person_id")
             , inverseJoinColumns = @JoinColumn(name = "product_id"))
@@ -38,15 +39,15 @@ public class Person {
         this.tgUserID = tgUserID;
     }
 
-    public void addProductToPerson(Product product){
-        if (productList.isEmpty()){
+    public void addProductToPerson(Product product) {
+        if (productList.isEmpty()) {
             productList = new HashSet<>();
         }
         productList.add(product);
     }
 
     public void addMessageToPerson(Message message) {
-        if (messageList.isEmpty()){
+        if (messageList.isEmpty()) {
             messageList = new ArrayList<>();
         }
         messageList.add(message);

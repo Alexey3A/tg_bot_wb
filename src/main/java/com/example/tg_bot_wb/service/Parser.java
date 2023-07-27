@@ -2,11 +2,15 @@ package com.example.tg_bot_wb.service;
 
 import com.example.tg_bot_wb.entity.Product;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class Parser {
 
@@ -22,14 +26,29 @@ public class Parser {
     }
 
     public Product parseProduct(Product product) throws InterruptedException {
-        System.setProperty("webdriver.chrome.driver", "G://IdeaProjects/chromedriver.exe");
+       /* System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--start-maximized");
-        WebDriver driver = new ChromeDriver(options);
+        WebDriver driver = new ChromeDriver(options);*/
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--start-maximized");
+        DesiredCapabilities dc = new DesiredCapabilities();
+        dc.setBrowserName("chrome");
+        dc.setCapability(ChromeOptions.CAPABILITY, options);
+        java.net.URL url = null;
+        try {
+            url = new URL("http://selenium-hub:4444/wd/hub");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+        WebDriver driver = new RemoteWebDriver(url, dc);
+        //       driver.manage().window().maximize();
+
         String article = product.getArticle();
         driver.get(URL);
-
 
         try {
             Thread.sleep(2000);
@@ -43,15 +62,23 @@ public class Parser {
             product.setProductName(productName);
 
             String price = driver.findElement(By
-                            .className("product-page__aside-sticky")).findElement(By.tagName("p"))
+                            //                           .className("product-page__aside-sticky")).findElement(By.tagName("p"))
+                            .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div/div/div/p/span/ins"))
                     .getText();
 
+            Thread.sleep(1000);
+
             price = price.replaceAll("\\s", "");
-            price = price.substring(0, price.indexOf("₽"));
+            try {
+                price = price.substring(0, price.indexOf("₽"));
+            } catch (
+                    StringIndexOutOfBoundsException e) {       // если товара нет в наличии, то ему присваевается цена "-1"
+                price = "-1";
+            }
             double doublePrice = Double.parseDouble(price);
             System.out.println(price);
-            product.setCurrentPrice(doublePrice);
-        } catch (IllegalArgumentException e){
+            product.setPrice(doublePrice);
+        } catch (IllegalArgumentException e) {
             driver.quit();
             throw new IllegalArgumentException();
         } catch (InterruptedException e) {
@@ -61,7 +88,6 @@ public class Parser {
             driver.quit();
             throw new WebDriverException();
         }
-
 
         driver.quit();
         return product;

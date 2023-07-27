@@ -20,7 +20,7 @@ CREATE TABLE "product" (
   "article" varchar UNIQUE,
   "product_name" varchar,
   "category" varchar,
-  "current_price" double precision
+  "price" double precision
 );
 
 CREATE TABLE "product_person" (
@@ -32,7 +32,8 @@ CREATE TABLE "request_details" (
   "id" bigserial PRIMARY KEY,
   "start_price" double precision,
   "product_id" bigserial,
-  "expected_price" double precision
+  "expected_price" double precision,
+  "current_price" double precision
 );
 
 ALTER TABLE "product_person" ADD FOREIGN KEY ("person_id") REFERENCES "person" ("id");
@@ -40,7 +41,5 @@ ALTER TABLE "product_person" ADD FOREIGN KEY ("person_id") REFERENCES "person" (
 ALTER TABLE "product_person" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
 
 ALTER TABLE "message" ADD FOREIGN KEY ("person_id") REFERENCES "person" ("id");
-
-ALTER TABLE "request_details" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
 
 ALTER TABLE "message" ADD FOREIGN KEY ("request_details_id") REFERENCES "request_details" ("id");
