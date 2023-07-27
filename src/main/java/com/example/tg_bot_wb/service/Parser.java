@@ -1,4 +1,4 @@
-package com.example.tg_bot_wb;
+package com.example.tg_bot_wb.service;
 
 import com.example.tg_bot_wb.entity.Product;
 import org.openqa.selenium.By;
