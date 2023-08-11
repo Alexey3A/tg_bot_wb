@@ -14,8 +14,6 @@ import java.net.URL;
 
 public class Parser {
 
-    private final String URL = "https://www.wildberries.ru/";
-
     private Product product;
 
     public Parser() {
@@ -27,7 +25,7 @@ public class Parser {
 
     public Product parseProduct(Product product) throws InterruptedException {
 
-            /*System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
+           /* System.setProperty("webdriver.chrome.driver", "chromedriver.exe");
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--start-maximized");
@@ -47,21 +45,23 @@ public class Parser {
         }
         WebDriver driver = new RemoteWebDriver(url, dc);
 
-        driver.manage().window().maximize();
+//        driver.manage().window().maximize();
 
         String article = product.getArticle();
+        String URL = "https://www.wildberries.ru/catalog/"+article+"/detail.aspx";
         driver.get(URL);
 
         try {
-            Thread.sleep(1000);
+            /*Thread.sleep(1000);
             driver.findElement(new By.ByXPath("/html/body/div[1]/header/div/div[2]/div[3]/div[1]/input"))
                     .sendKeys(article);
-            driver.findElement(By.id("applySearchBtn")).click();
+            driver.findElement(By.id("applySearchBtn")).click();*/
 
-            Thread.sleep(1000);
+            Thread.sleep(1500);
 
-            String productName = driver.findElement(By.xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[5]/div[1]/h1"))
-//                    driver.findElement(By.tagName("h1"))
+            String productName =
+//                    driver.findElement(By.xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[6]/div[1]/h1"))
+                    driver.findElements(By.tagName("h1")).get(0)
                     .getText();
 
             System.out.println(productName);
@@ -84,7 +84,7 @@ public class Parser {
 
             System.out.println(price);
 
-            Thread.sleep(1000);
+//            Thread.sleep(1000);
 
             price = price.replaceAll("\\s", "");
             try {
@@ -104,6 +104,10 @@ public class Parser {
             throw new InterruptedException();
         } catch (WebDriverException e) {
             driver.quit();
+            throw new WebDriverException();
+        } catch (IndexOutOfBoundsException e) {
+            driver.quit();
+            System.out.println(e.getMessage());
             throw new WebDriverException();
         }
         driver.quit();
