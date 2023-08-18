@@ -59,10 +59,7 @@ public class Parser {
 
             Thread.sleep(1500);
 
-            String productName =
-//                    driver.findElement(By.xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[6]/div[1]/h1"))
-                    driver.findElements(By.tagName("h1")).get(0)
-                    .getText();
+            String productName = driver.findElements(By.tagName("h1")).get(0).getText();
 
             System.out.println(productName);
 
@@ -72,14 +69,18 @@ public class Parser {
 
             try {
                 price = driver.findElement(By
-//                                                       .className("product-page__aside-sticky")).findElement(By.tagName("p"))
                                 .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div/div/div/p/span"))
-                        .getText();
+                                .getText();
             } catch (WebDriverException e) {
-                price = driver.findElement(By
-//                                                       .className("product-page__aside-sticky")).findElement(By.tagName("p"))
-                                .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div/p/span"))
-                        .getText();
+             try {
+                 price = driver.findElement(By
+                                 .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div/p/span"))
+                                 .getText();
+             } catch (WebDriverException exception) {
+                 price = driver.findElement(By
+                                 .xpath("/html/body/div[1]/main/div[2]/div/div[3]/div/div[3]/div[2]/div[1]/div/div/div/p/span/ins"))
+                                 .getText();
+             }
             }
 
             System.out.println(price);
