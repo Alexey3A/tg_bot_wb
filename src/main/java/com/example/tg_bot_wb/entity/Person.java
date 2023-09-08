@@ -20,6 +20,10 @@ public class Person {
     private String userName;
     @Column(name = "is_bot")
     private boolean isBot;
+    @Column(name = "is_article")
+    private boolean isArticle;
+    @Column(name = "is_delete_article")
+    private boolean isDeleteArticle;
 
     @OneToMany(mappedBy = "person", cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.EAGER)
     private List<Message> messageList;
@@ -116,6 +120,22 @@ public class Person {
 
     public void setProductList(Set<Product> productList) {
         this.productList = productList;
+    }
+
+    public boolean isArticle() {
+        return isArticle;
+    }
+
+    public void setArticle(boolean article) {
+        isArticle = article;
+    }
+
+    public boolean isDeleteArticle() {
+        return isDeleteArticle;
+    }
+
+    public void setDeleteArticle(boolean deleteArticle) {
+        isDeleteArticle = deleteArticle;
     }
 
     @Override

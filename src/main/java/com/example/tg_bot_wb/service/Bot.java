@@ -26,8 +26,6 @@ public class Bot extends TelegramLongPollingBot {
 
     private final PersonService personService;
     private final ProductService productService;
-    private boolean isArticle = false;
-    private boolean isDeleteArticle = false;
     private boolean isAdmin = false;
     @Value("${bot.adminId}")
     private long  adminId;
@@ -52,6 +50,8 @@ public class Bot extends TelegramLongPollingBot {
 
     @Transactional
     public void onUpdateReceived(Update update) {
+        boolean isArticle = false;
+        boolean isDeleteArticle = false;
 
         User user = null;
         Message msg = null;
@@ -63,6 +63,15 @@ public class Bot extends TelegramLongPollingBot {
 
         assert user != null;
         long tgUserID = user.getId();
+
+        Person person = personService.findByTgUserID(tgUserID);
+        if (person == null) {
+            person = new Person(user.getFirstName(), tgUserID);
+            person = personService.savePerson(person);
+        }
+
+        isArticle = person.isArticle();
+        isDeleteArticle = person.isDeleteArticle();
 
         System.out.println(update);
         String article = msg.getText();
@@ -76,18 +85,15 @@ public class Bot extends TelegramLongPollingBot {
         }
 
         com.example.tg_bot_wb.entity.Message personMessage = new com.example.tg_bot_wb.entity.Message(article, System.currentTimeMillis());
-        Person person = personService.findByTgUserID(tgUserID);
 
-        if (person == null) {
-            person = new Person(user.getFirstName(), tgUserID);
-            person = personService.savePerson(person);
-        }
         Product product = productService.findByArticle(article);
 
         if (msg.isCommand()) {
+            isAdmin = false;
+            isArticle = false;
+            isDeleteArticle = false;
             var txt = msg.getText();
             if (txt.equals("/menu")) {
-                isArticle = false;
                 sendMenu(msg);
             } else if (txt.equals("/info")){
                 sendText(tgUserID, infoCommand);
@@ -96,19 +102,29 @@ public class Bot extends TelegramLongPollingBot {
         }
 
         if (article.equals("Добавить товар") || article.equals("Удалить товар")) {
+            isAdmin = false;
             isArticle = true;
             if (article.equals("Удалить товар")) isDeleteArticle = true;
             sendText(tgUserID, "Укажите артикул товара");
+            person.setArticle(isArticle);
+            person.setDeleteArticle(isDeleteArticle);
+            personService.savePerson(person);
         }
 
+
         if (article.equals("Мой список товаров")) {
+            isAdmin = false;
             isArticle = false;
+            isDeleteArticle = false;
             String productList = person.getProductList().toString();
             if (productList != null) {
                 sendText(tgUserID, productList);
             } else {
                 sendText(tgUserID, "Список пустой. Нажмите кнопку \"Добавить товар\"");
             }
+            person.setArticle(isArticle);
+            person.setDeleteArticle(isDeleteArticle);
+            personService.savePerson(person);
         }
 
         // Сообщение от администратора для всех пользователей
@@ -159,9 +175,14 @@ public class Bot extends TelegramLongPollingBot {
                 }
             }
             isArticle = false;
+            person.setArticle(isArticle);
+            personService.savePerson(person);
         }
 
-        if (isDeleteArticle && isArticle && !article.equals("Удалить товар")) {
+        if (isDeleteArticle && isArticle
+                && !article.equals("Удалить товар")
+                && !article.equals("Добавить товар")
+                && !article.equals("сообщение для всех")) {
             try {
                 productService.deleteProductFromPerson(person, article);
                 productService.deleteProduct(article);
@@ -173,6 +194,9 @@ public class Bot extends TelegramLongPollingBot {
             }
             isDeleteArticle = false;
             isArticle = false;
+            person.setArticle(isArticle);
+            person.setDeleteArticle(isDeleteArticle);
+            personService.savePerson(person);
         }
 
         if (update.hasCallbackQuery()) {

@@ -4,7 +4,9 @@ CREATE TABLE "person" (
   "first_name" varchar,
   "last_name" varchar,
   "user_name" varchar,
-  "is_bot" boolean
+  "is_bot" boolean,
+  "is_article" boolean,
+  "is_delete_article" boolean
 );
 
 CREATE TABLE "message" (
