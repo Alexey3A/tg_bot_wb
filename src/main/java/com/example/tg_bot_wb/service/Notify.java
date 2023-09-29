@@ -44,15 +44,18 @@ public class Notify {
                             requestDetails.setStartPrice(startPrice);
                             requestDetails.setCurrentPrice(currentPrice);
                             requestDetailsService.saveRequestDetails(requestDetails);
-                            System.out.println(product.getProductName() + " (артикул: " + product.getArticle() + ") "
+                            String article = product.getArticle();
+                            System.out.println(product.getProductName() + " (артикул: " + article + ") "
                                     + "изменение цены: " + startPrice + " -> " + currentPrice);
                             if (currentPrice != -1) {
-                                String s = product.getProductName() + " (артикул: " + product.getArticle() + ") "
-                                        + " \n" + "изменение цены: " + startPrice + " -> " + currentPrice;
+                                String s = product.getProductName() + " (артикул: " + article + ") "
+                                        + " \n" + "изменение цены: " + startPrice + " -> " + currentPrice
+                                        + "\n" + "https://www.wildberries.ru/catalog/"+article+"/detail.aspx";
                                 bot.sendText(person.getTgUserID(), s);
                             } else {
-                                String s = product.getProductName() + " (артикул: " + product.getArticle() + ") "
-                                        + "\n" + "товара нет в наличии";
+                                String s = product.getProductName() + " (артикул: " + article + ") "
+                                        + "\n" + "товара нет в наличии"
+                                        + "\n" + "https://www.wildberries.ru/catalog/"+article+"/detail.aspx";
                                 bot.sendText(person.getTgUserID(), s);
                             }
                         }
